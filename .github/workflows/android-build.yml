@@ -1,55 +1,92 @@
-name: Build Android APK
+name: 🤖 Build Android APK
 
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Memungkinkan Anda memicu build secara manual lewat tombol di GitHub
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Tipe Build'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
 
 jobs:
   build-android:
+    name: Build APK
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: frontend
+
     steps:
-      # 1. Mengambil kode dari repository Anda
-      - name: Checkout Repository
+      # 1. Ambil kode dari repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup NodeJS
-      - name: Setup Node.js
+      # 2. Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      # 3. Setup Java 21 untuk Android
-      - name: Setup Java JDK
+      # 3. Setup Java untuk Android
+      - name: ☕ Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
 
-      # 4. Install NPM dependensi
-      - name: Install Dependencies
-        run: npm install
+      # 4. Cache Gradle (mempercepat build berikutnya)
+      - name: 📦 Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            frontend/android/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
-      # 5. Sinkronisasi Capacitor
-      - name: Sync Capacitor
-        run: |
-          mkdir -p out
-          npx cap sync android
+      # 5. Install dependencies npm
+      - name: 📦 Install NPM Dependencies
+        run: npm ci
 
-      # 6. Memberi izin akses file Gradle
-      - name: Make gradlew executable
-        working-directory: ./android
+      # 6. Buat folder out/ kosong (dibutuhkan Capacitor MODE B)
+      - name: 📁 Prepare web output folder
+        run: mkdir -p out
+
+      # 7. Sync Capacitor ke Android
+      - name: 🔄 Sync Capacitor Android
+        run: npx cap sync android
+
+      # 8. Beri izin execute ke Gradle wrapper
+      - name: 🔑 Make gradlew executable
+        working-directory: frontend/android
         run: chmod +x gradlew
 
-      # 7. Proses Build APK!
-      - name: Build Debug APK
-        working-directory: ./android
-        run: ./gradlew assembleDebug
+      # 9. Build APK
+      - name: 🔨 Build Debug APK
+        working-directory: frontend/android
+        run: ./gradlew assembleDebug --no-daemon
 
-      # 8. Upload file APK yang sudah jadi ke halaman GitHub Actions
-      - name: Upload APK Artifact
+      # 10. Rename APK dengan tanggal & run number
+      - name: ✏️ Rename APK
+        run: |
+          DATE=$(date +'%Y%m%d')
+          mv android/app/build/outputs/apk/debug/app-debug.apk \
+             android/app/build/outputs/apk/debug/BEM-Event-v$DATE-${{ github.run_number }}.apk
+
+      # 11. Upload APK sebagai artifact
+      - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: BEM-Event-APK-${{ github.run_number }}
+          path: frontend/android/app/build/outputs/apk/debug/BEM-Event-*.apk
+          retention-days: 30

@@ -119,7 +119,11 @@ export default function DetailEventPage() {
 
   if (loading) return <MahasiswaLayout><div className="flex items-center justify-center min-h-[80vh]"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div></MahasiswaLayout>;
 
-  const event = data?.event;
+  if (!data || !data.event) {
+    return <MahasiswaLayout><div className="flex items-center justify-center min-h-[80vh] font-bold text-slate-500">Mengarahkan kembali...</div></MahasiswaLayout>;
+  }
+
+  const event = data.event;
   const isFree = event?.tipe_event === "gratis" || event?.harga <= 0;
   const isRegistered = data?.is_registered;
 
