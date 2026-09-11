@@ -14,11 +14,7 @@ export default function DetailEventPage() {
   const router = useRouter();
   const params = useParams();
   
-  let event_id = params.id as string;
-  if (params.id) {
-    try { event_id = atob(decodeURIComponent(params.id as string)); } catch (e) {}
-  }
-
+  const event_id = params.id as string;
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("info"); // info, form

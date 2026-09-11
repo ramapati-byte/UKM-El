@@ -22,7 +22,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   // Update baseURL on each request in case window was undefined during initialization
   config.baseURL = getDynamicApiUrl();
-  
+
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
     if (token) {
