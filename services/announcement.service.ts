@@ -113,7 +113,7 @@ class NotificationMockService implements NotificationService {
 
   async list(params?: NotificationQuery): Promise<{ data: NotificationEntity[]; total: number }> {
     let result = [...this.notifications];
-    if (params?.dibaca && params.dibaca !== "all") result = result.filter((n) => n.dibaca === (params.dibaca === "true"));
+    if (params?.dibaca !== undefined && params.dibaca !== "all") result = result.filter((n) => n.dibaca === params.dibaca);
     if (params?.tipe && params.tipe !== "all") result = result.filter((n) => n.tipe === params.tipe);
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 10;

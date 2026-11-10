@@ -2,7 +2,6 @@
 
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
-import DataTable from "@/components/ui/DataTable";
 import { getPermissions } from "@/lib/permissions";
 import Badge from "@/components/ui/Badge";
 

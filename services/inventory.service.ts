@@ -130,7 +130,7 @@ class InventoryMockService implements InventoryService {
     return { ...this.loans[idx] };
   }
 
-  async checkAvailability(itemId: string, tanggalAwal: string, tanggalAkhir: string): Promise<boolean> {
+  async checkAvailability(itemId: string, _tanggalAwal: string, _tanggalAkhir: string): Promise<boolean> {
     const conflicting = this.loans.some(
       (l) => l.itemId === itemId && l.status !== "dikembalikan" && l.status !== "ditolak"
     );

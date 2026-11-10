@@ -62,7 +62,7 @@ class ProgramMockService implements ProgramService {
     return { ...this.programs[idx] };
   }
 
-  async ranking(params?: RankingQuery): Promise<RankingEntry[]> {
+  async ranking(_params?: RankingQuery): Promise<RankingEntry[]> {
     return [...MOCK_RANKING];
   }
 }

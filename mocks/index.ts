@@ -1,6 +1,5 @@
 // mocks/index.ts — Re-export semua data mock
 
-export * from "./auth.mock";
 export * from "./event.mock";
 export * from "./member.mock";
 export * from "./ukm.mock";

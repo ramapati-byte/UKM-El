@@ -10,7 +10,6 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { documentService } from "@/services/document.service";
 import type { DocumentEntity, DocumentQuery } from "@/types/document";
-import { formatNumber } from "@/lib/format";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentEntity[]>([]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
@@ -8,7 +8,8 @@ import { letterService } from "@/services/letter.service";
 import type { LetterEntity } from "@/types/letter";
 import { formatDateTime } from "@/lib/format";
 
-export default function LetterDetailPage({ params }: { params: { id: string } }) {
+export default function LetterDetailPage({ params: paramsProp }: { params: Promise<{ id: string }> | { id: string } }) {
+  const params = "then" in paramsProp ? use(paramsProp as Promise<{ id: string }>) : paramsProp as { id: string };
   const [letter, setLetter] = useState<LetterEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

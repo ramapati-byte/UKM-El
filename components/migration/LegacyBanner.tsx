@@ -3,7 +3,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { isMockEnabled } from "../../lib/env";
 
 export default function LegacyBanner() {
   const [visible, setVisible] = useState(true);

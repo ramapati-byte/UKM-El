@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { ukmService } from "@/services/ukm.service";
 import type { UkmEntity } from "@/types/ukm";
+import type { BadgeVariant } from "@/types/common";
 import { usePermission } from "@/hooks/usePermission";
 
-export default function UkmDetailPage({ params }: { params: { id: string } }) {
+export default function UkmDetailPage({ params: paramsProp }: { params: Promise<{ id: string }> | { id: string } }) {
+  const params = "then" in paramsProp ? use(paramsProp as Promise<{ id: string }>) : paramsProp as { id: string };
   const { can } = usePermission("superadmin");
   const [ukm, setUkm] = useState<UkmEntity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,11 @@ export default function UkmDetailPage({ params }: { params: { id: string } }) {
     );
   }
 
-  const statusColor: Record<string, string> = {
-    verified: "bg-success text-white",
-    pending: "bg-warning text-white",
-    rejected: "bg-danger text-white",
-    inactive: "bg-secondary text-white",
+  const statusVariant: Record<string, BadgeVariant> = {
+    verified: "success",
+    pending: "warning",
+    rejected: "danger",
+    inactive: "secondary",
   };
 
   return (
@@ -86,7 +88,7 @@ export default function UkmDetailPage({ params }: { params: { id: string } }) {
                 <h1 className="text-xl font-bold text-slate-900 dark:text-white">{ukm.nama}</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">@{ukm.ukmSlug}</p>
               </div>
-              <Badge variant={statusColor[ukm.status] || "primary"} className="ml-auto">
+              <Badge variant={statusVariant[ukm.status] ?? "secondary"}>
                 {ukm.status}
               </Badge>
             </div>
@@ -98,7 +100,7 @@ export default function UkmDetailPage({ params }: { params: { id: string } }) {
               </div>
               <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 py-3">
                 <span className="text-slate-500">Status</span>
-                <span className={`font-medium ${statusColor[ukm.status]}`}>{ukm.status}</span>
+                <Badge variant={statusVariant[ukm.status] ?? "secondary"}>{ukm.status}</Badge>
               </div>
               <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 py-3">
                 <span className="text-slate-500">Kontak Person</span>

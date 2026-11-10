@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import PublicShell from "@/components/shell/PublicShell";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
@@ -8,7 +8,8 @@ import Button from "@/components/ui/Button";
 import { ukmService } from "@/services/ukm.service";
 import type { UkmEntity } from "@/types/ukm";
 
-export default function UkmDetailPublicPage({ params }: { params: { slug: string } }) {
+export default function UkmDetailPublicPage({ params: paramsProp }: { params: Promise<{ slug: string }> | { slug: string } }) {
+  const params = "then" in paramsProp ? use(paramsProp as Promise<{ slug: string }>) : paramsProp as { slug: string };
   const [ukm, setUkm] = useState<UkmEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

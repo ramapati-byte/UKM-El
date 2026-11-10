@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { isMockEnabled } from './env';
 import { mockApiAdapter } from './mock-api';
-import { getActiveUkId, getActiveUkOrDefault, isMultiTenantEnabled } from './tenant';
+import { getActiveUkId, getActiveUkSlug, isMultiTenantEnabled } from './tenant';
 
 // Helper untuk mendapatkan URL API (untuk axios request)
 export const getDynamicApiUrl = () => {

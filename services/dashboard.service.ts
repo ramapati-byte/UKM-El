@@ -12,7 +12,7 @@ class DashboardMockService implements DashboardService {
     return { ...MOCK_DASHBOARD_STATS, ukmId: ukmId ?? MOCK_DASHBOARD_STATS.ukmId };
   }
 
-  async getWidgets(ukmId?: string): Promise<any[]> {
+  async getWidgets(_ukmId?: string): Promise<Record<string, unknown>[]> {
     return [
       { id: "widget-1", judul: "Total Anggota", tipe: "statcard", data: { value: MOCK_DASHBOARD_STATS.totalAnggota }, updatedAt: new Date().toISOString() },
       { id: "widget-2", judul: "Total Kegiatan", tipe: "statcard", data: { value: MOCK_DASHBOARD_STATS.totalKegiatan }, updatedAt: new Date().toISOString() },
@@ -21,7 +21,7 @@ class DashboardMockService implements DashboardService {
     ];
   }
 
-  async getTasks(ukmId?: string): Promise<any[]> {
+  async getTasks(_ukmId?: string): Promise<Record<string, unknown>[]> {
     return [];
   }
 
@@ -38,10 +38,10 @@ class DashboardRealService implements DashboardService {
   async getStats(): Promise<DashboardStats> {
     throw new Error("Real adapter belum tersedia");
   }
-  async getWidgets(): Promise<any[]> {
+  async getWidgets(): Promise<Record<string, unknown>[]> {
     throw new Error("Real adapter belum tersedia");
   }
-  async getTasks(): Promise<any[]> {
+  async getTasks(): Promise<Record<string, unknown>[]> {
     throw new Error("Real adapter belum tersedia");
   }
   async exportPdf(): Promise<Blob> {

@@ -43,7 +43,7 @@ class UkmMockService implements UkmService {
   }
 
   async getBySlug(slug: string): Promise<UkmEntity> {
-    const ukm = this.ukms.find((u) => u.uktmSlug === slug);
+    const ukm = this.ukms.find((u) => u.ukmSlug === slug);
     if (!ukm) throw new Error("UKM tidak ditemukan");
     return { ...ukm };
   }

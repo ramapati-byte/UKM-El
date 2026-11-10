@@ -78,7 +78,7 @@ class FinanceMockService implements FinanceService {
     this.transactions.splice(idx, 1);
   }
 
-  async summary(tanggalAwal?: string, tanggalAkhir?: string): Promise<FinanceSummary> {
+  async summary(_tanggalAwal?: string, _tanggalAkhir?: string): Promise<FinanceSummary> {
     return { ...MOCK_FINANCE_SUMMARY };
   }
 
