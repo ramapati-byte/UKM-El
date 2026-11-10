@@ -24,9 +24,17 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("lte-theme")||"auto";var d=t==="auto"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;document.documentElement.setAttribute("data-bs-theme",d);var p=location.pathname||"/";var r=p.indexOf("/admin")===0?"superadmin":p.indexOf("/organizer")===0?"penyelenggara":p.indexOf("/mahasiswa")===0?"mahasiswa":null;if(r&&!localStorage.getItem("user")){var u=r==="superadmin"?{id:1,name:"Super Admin",nama_lengkap:"Super Admin",email:"superadmin@elrahma.ac.id",role:"superadmin"}:r==="penyelenggara"?{id:2,name:"BEM El Rahma",nama_lengkap:"BEM El Rahma",email:"bem@elrahma.ac.id",role:"penyelenggara"}:{id:1,name:"Ahmad Fauzi",nama_lengkap:"Ahmad Fauzi",email:"ahmad.fauzi@elrahma.ac.id",role:"mahasiswa"};localStorage.setItem("user",JSON.stringify(u));localStorage.setItem("token","demo-token-2026");}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
     </html>
   );

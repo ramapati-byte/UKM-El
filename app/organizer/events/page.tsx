@@ -2,17 +2,17 @@
 import { getBackendBaseUrl } from "@/lib/axios";
 
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
-  Calendar, Search, ChevronLeft, ChevronRight,
+  Calendar, Search,
   MapPin, Globe, Lock, ChevronDown, Edit3, FileText,
-  HelpCircle, BarChart2, Users, QrCode, Download, Trash2, Plus, Image as ImageIcon,
+  HelpCircle, BarChart2, Users, Download, Trash2, Plus, Image as ImageIcon,
   Loader2, MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
+import Pagination from "@/components/ui/Pagination";
 
 interface Workshop {
   id: number;
@@ -27,7 +27,7 @@ interface Workshop {
   total_participants: number;
 }
 
-interface Pagination {
+interface EventPagination {
   total_records: number;
   total_pages: number;
   current_page: number;
@@ -35,10 +35,9 @@ interface Pagination {
 }
 
 export default function KelolaEventPage() {
-  const router = useRouter();
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const [events, setEvents] = useState<Workshop[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination, setPagination] = useState<EventPagination | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -105,6 +104,7 @@ export default function KelolaEventPage() {
 
   const navLinks = [
     { href: "/organizer/dashboard", icon: <Calendar className="w-5 h-5" />, label: "Dashboard" },
+    { href: "/organizer/events/calendar", icon: <Calendar className="w-5 h-5" />, label: "Kalender" },
     { href: "/organizer/events", icon: <Calendar className="w-5 h-5" />, label: "Kelola Event", active: true },
     { href: "/organizer/pendaftar", icon: <Users className="w-5 h-5" />, label: "Kelola Pendaftar" },
     { href: "/organizer/tim", icon: <Users className="w-5 h-5" />, label: "Kelola Tim" },
@@ -129,78 +129,64 @@ export default function KelolaEventPage() {
   return (
     <DashboardLayout
       user={user}
-      title=""
-      subtitle=""
+      title="Kelola Event"
+      subtitle="Atur jadwal, pantau pendaftaran, dan kelola materi event."
       links={navLinks}
       onLogout={handleLogout}
     >
-      <div className="pb-20">
+      <div className="space-y-6 pb-10">
 
-        {/* Hero Section */}
-        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden pb-24 pt-10 px-6 md:px-12 rounded-b-[3rem] shadow-xl -mx-4 md:-mx-8 -mt-8">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-indigo-800 rounded-full opacity-40 blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-amber-500 rounded-full opacity-20 blur-3xl" />
-
-          <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="w-full text-white">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-4">
-                <Calendar className="w-3 h-3 text-amber-400" />
-                <span className="text-xs font-semibold tracking-wide uppercase text-indigo-100">Manajemen Event</span>
+        {/* Toolbar */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="relative w-full lg:max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-4 h-4 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              placeholder="Ketik judul event untuk mencari..."
+              className="block w-full pl-10 pr-10 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
+            />
+            {loading && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
               </div>
-              <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-3">
-                Kelola <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">Event</span>
-              </h1>
-              <p className="text-indigo-100/80 text-sm md:text-base max-w-xl leading-relaxed">
-                Atur jadwal, pantau pendaftaran, dan kelola materi event Anda dalam satu tampilan.
-              </p>
-            </div>
-            <div className="flex justify-start md:justify-end shrink-0">
-              <Link href="/organizer/create-event"
-                className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-900 font-extrabold px-8 py-4 rounded-2xl shadow-xl transition-all hover:scale-105"
-              >
-                <Plus className="w-6 h-6" /> <span>Buat Event Baru</span>
-              </Link>
-            </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/organizer/events/calendar"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <Calendar className="w-4 h-4" /> Kalender
+            </Link>
+            <Link
+              href="/organizer/create-event"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium shadow-xs transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Buat Event
+            </Link>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 relative z-20 space-y-6">
-          {/* Search & Filter Card */}
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-2">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="w-5 h-5 text-indigo-400" />
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                placeholder="Ketik judul event untuk mencari..."
-                className="block w-full pl-11 pr-10 py-4 bg-slate-50 border-transparent text-slate-900 placeholder-slate-400 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-300"
-              />
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                {loading && <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />}
-              </div>
-            </div>
-          </div>
-
-
-
-          {/* Container Data */}
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-visible">
-            <div className="hidden md:block max-md:overflow-x-auto min-h-[400px] pb-10">
-              <table className="w-full text-left border-separate border-spacing-0">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
-                    <th className="px-6 py-5 rounded-tl-3xl">Detail Event</th>
-                    <th className="px-6 py-5">Waktu & Tempat</th>
-                    <th className="px-6 py-5 text-center">Visibilitas</th>
-                    <th className="px-6 py-5 text-center">Kategori</th>
-                    <th className="px-6 py-5 text-center">Persetujuan</th>
-                    <th className="px-6 py-5 text-center rounded-tr-3xl">Kontrol</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
+        {/* Container Data */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-visible">
+          <div className="hidden md:block max-md:overflow-x-auto min-h-[400px] pb-10">
+            <table className="w-full text-left border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                  <th className="px-6 py-4">Detail Event</th>
+                  <th className="px-6 py-4">Waktu &amp; Tempat</th>
+                  <th className="px-6 py-4 text-center">Visibilitas</th>
+                  <th className="px-6 py-4 text-center">Kategori</th>
+                  <th className="px-6 py-4 text-center">Persetujuan</th>
+                  <th className="px-6 py-4 text-center">Kontrol</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
                   {!loading && events.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-gray-500 font-medium">
@@ -298,6 +284,14 @@ export default function KelolaEventPage() {
                               <div className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-2xl bg-white border border-gray-100 ring-1 ring-black ring-opacity-5 z-50">
                                 <div className="p-1">
                                   <Link
+                                    href={`/organizer/events/detail/${event.id}`}
+                                    onClick={() => setOpenDropdownId(null)}
+                                    className="w-full group flex items-center px-4 py-2 text-sm text-indigo-700 bg-indigo-50/60 font-bold rounded-lg hover:bg-indigo-100 transition-colors"
+                                  >
+                                    <BarChart2 className="w-4 h-4 mr-3 text-indigo-600" /> Detail Hub Event
+                                  </Link>
+                                  <div className="border-t border-gray-100 my-1"></div>
+                                  <Link
                                     href={`/organizer/events/edit/${btoa(event.id.toString())}`}
                                     onClick={() => setOpenDropdownId(null)}
                                     className="w-full group flex items-center px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
@@ -340,6 +334,13 @@ export default function KelolaEventPage() {
                                     className="w-full group flex items-center px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
                                   >
                                     <Download className="w-4 h-4 mr-3 text-gray-400 group-hover:text-indigo-500" /> Sertifikat
+                                  </Link>
+                                  <Link
+                                    href={`/organizer/events/lpj/${event.id}`}
+                                    onClick={() => setOpenDropdownId(null)}
+                                    className="w-full group flex items-center px-4 py-2 text-sm text-amber-700 font-semibold rounded-lg hover:bg-amber-50 transition-colors"
+                                  >
+                                    <FileText className="w-4 h-4 mr-3 text-amber-500" /> LPJ Kegiatan
                                   </Link>
                                   <div className="border-t border-gray-100 my-1"></div>
                                   <button
@@ -417,6 +418,14 @@ export default function KelolaEventPage() {
                         <div className="absolute right-0 bottom-full mb-2 w-full sm:w-56 rounded-xl shadow-xl bg-white border border-gray-100 ring-1 ring-black ring-opacity-5 z-50">
                           <div className="p-1">
                             <Link
+                              href={`/organizer/events/detail/${event.id}`}
+                              onClick={() => setOpenDropdownId(null)}
+                              className="w-full flex items-center px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50/60 rounded-lg hover:bg-indigo-100 transition-colors"
+                            >
+                              <BarChart2 className="w-3.5 h-3.5 mr-2 text-indigo-600" /> Detail Hub Event
+                            </Link>
+                            <div className="border-t border-gray-100 my-1"></div>
+                            <Link
                               href={`/organizer/events/edit/${btoa(event.id.toString())}`}
                               onClick={() => setOpenDropdownId(null)}
                               className="w-full flex items-center px-3 py-2 text-xs text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
@@ -460,6 +469,13 @@ export default function KelolaEventPage() {
                             >
                               <Download className="w-3.5 h-3.5 mr-2" /> Sertifikat
                             </Link>
+                            <Link
+                              href={`/organizer/events/lpj/${event.id}`}
+                              onClick={() => setOpenDropdownId(null)}
+                              className="w-full flex items-center px-3 py-2 text-xs text-amber-700 font-semibold rounded-lg hover:bg-amber-50 transition-colors"
+                            >
+                              <FileText className="w-3.5 h-3.5 mr-2 text-amber-500" /> LPJ Kegiatan
+                            </Link>
                             <div className="border-t border-gray-100 my-1"></div>
                             <button
                               type="button"
@@ -477,46 +493,17 @@ export default function KelolaEventPage() {
               )}
             </div>
 
-            {/* Pagination Footer */}
             {pagination && pagination.total_pages > 1 && (
-              <div className="p-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50 rounded-b-2xl">
-                <span className="text-sm text-gray-500 font-medium">
-                  Halaman {pagination.current_page} dari {pagination.total_pages} (Total {pagination.total_records} Event)
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 border border-gray-200 rounded-xl hover:bg-white disabled:opacity-40 transition-all shadow-sm bg-white"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <div className="flex gap-1">
-                    {[...Array(pagination.total_pages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
-                          }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.total_pages))}
-                    disabled={currentPage === pagination.total_pages}
-                    className="p-2 border border-gray-200 rounded-xl hover:bg-white disabled:opacity-40 transition-all shadow-sm bg-white"
-                  >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-              </div>
+              <Pagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.total_pages}
+                totalRecords={pagination.total_records}
+                onPageChange={setCurrentPage}
+              />
             )}
 
           </div>
         </div>
-      </div>
     </DashboardLayout>
   );
 }

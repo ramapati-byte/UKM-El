@@ -1,9 +1,12 @@
 import axios from "axios";
 import { getDynamicApiUrl } from "./axios";
+import { isMockEnabled } from "./env";
+import { mockApiAdapter } from "./mock-api";
 
 // Membuat instance axios global yang bisa di-reuse di seluruh aplikasi
 const api = axios.create({
   baseURL: getDynamicApiUrl(),
+  adapter: isMockEnabled() ? mockApiAdapter : undefined,
 });
 
 // Interceptor (Opsional tapi sangat berguna): 

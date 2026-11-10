@@ -3,11 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Mail, Lock, Loader2, UserPlus, Shield, Phone, Hash, Info } from "lucide-react";
 import axios from "axios";
-import api from "@/lib/axios"; // Changed to use standard axios instance if defined
-import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import Swal from 'sweetalert2';
+import api from "@/lib/axios";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
+import Swal from "sweetalert2";
+import Card, { CardBody } from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Callout from "@/components/ui/Callout";
+
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
+
+interface GoogleResponse {
+  access_token?: string;
+  credential?: string;
+}
 
 function RegisterContent() {
   const router = useRouter();
@@ -23,7 +35,9 @@ function RegisterContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -33,23 +47,23 @@ function RegisterContent() {
     setError("");
 
     try {
-      if (formData.role === 'mahasiswa') {
+      if (formData.role === "mahasiswa") {
         const payload = {
           nim: formData.nim,
           email: formData.email,
           password: formData.password,
           nama_lengkap: formData.nama_lengkap,
-          jenis_kelamin: 'Laki-laki', // default for now, can add to form
-          prodi: formData.prodi || '-',
-          no_hp_mahasiswa: formData.no_hp_mahasiswa || '-'
+          jenis_kelamin: "Laki-laki", // default for now, can add to form
+          prodi: formData.prodi || "-",
+          no_hp_mahasiswa: formData.no_hp_mahasiswa || "-",
         };
         const response = await api.post("/auth/register/mahasiswa", payload);
         Swal.fire({
-          icon: 'success',
-          title: 'Registrasi Berhasil',
+          icon: "success",
+          title: "Registrasi Berhasil",
           text: response.data.message,
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
         router.push("/login");
       } else {
@@ -57,23 +71,25 @@ function RegisterContent() {
           email: formData.email,
           password: formData.password,
           nama_lengkap: formData.nama_lengkap,
-          no_whatsapp: formData.no_hp_mahasiswa || '-',
-          jenis_kelamin: 'Laki-laki',
-          role: 'penyelenggara'
+          no_whatsapp: formData.no_hp_mahasiswa || "-",
+          jenis_kelamin: "Laki-laki",
+          role: "penyelenggara",
         };
         const response = await api.post("/auth/register/user", payload);
         Swal.fire({
-          icon: 'success',
-          title: 'Registrasi Berhasil',
+          icon: "success",
+          title: "Registrasi Berhasil",
           text: response.data.message,
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
         router.push("/login/admin");
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Terjadi kesalahan saat registrasi.");
+        setError(
+          err.response?.data?.message || "Terjadi kesalahan saat registrasi."
+        );
       } else {
         setError("Terjadi kesalahan sistem yang tidak diketahui.");
       }
@@ -82,156 +98,152 @@ function RegisterContent() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: GoogleResponse) => {
     try {
-      const tokenToUse = credentialResponse.access_token || credentialResponse.credential;
-      const res = await api.post('/auth/google', { token: tokenToUse, action: 'register' });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      Swal.fire({
-        icon: 'success',
-        title: 'Registrasi Berhasil',
-        text: 'Selamat datang di CampusEvent!',
-        timer: 1500,
-        showConfirmButton: false
+      const tokenToUse =
+        credentialResponse.access_token || credentialResponse.credential;
+      const res = await api.post("/auth/google", {
+        token: tokenToUse,
+        action: "register",
       });
-      router.push('/mahasiswa/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Gagal login via Google');
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      Swal.fire({
+        icon: "success",
+        title: "Registrasi Berhasil",
+        text: "Selamat datang di CampusEvent!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      router.push("/mahasiswa/dashboard");
+    } catch (err: unknown) {
+      const message = (err as ApiError).response?.data?.message;
+      setError(message || "Gagal login via Google");
     }
   };
 
   const login = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
-    onError: () => setError('Login Google dibatalkan atau gagal.'),
+    onError: () => setError("Login Google dibatalkan atau gagal."),
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans relative flex flex-col justify-center items-center py-12 px-4">
-      {/* Background Accent from Dashboard */}
-      <div className="absolute top-0 left-0 w-full h-[50vh] bg-indigo-900 rounded-b-[3rem] shadow-xl overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
-      </div>
-
-      <div className="w-full max-w-md p-8 sm:p-10 bg-white rounded-3xl border border-gray-100 shadow-2xl relative z-10 mt-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+            <i className="bi bi-person-plus" aria-hidden="true" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Buat Akun</h1>
-          <p className="text-gray-500 text-sm font-medium">Bergabung dengan ekosistem CampusEvent</p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl text-center font-medium">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-6">
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Nama Lengkap</label>
-            <input
-              type="text"
-              name="nama_lengkap"
-              required
-              value={formData.nama_lengkap}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 text-black placeholder-gray-400 text-sm font-medium"
-              placeholder="John Doe"
-            />
-          </div>
-
-          {formData.role === 'mahasiswa' && (
-            <div>
-              <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">NIM</label>
-              <input
-                type="text"
-                name="nim"
-                required={formData.role === 'mahasiswa'}
-                value={formData.nim}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 text-black placeholder-gray-400 text-sm font-medium"
-                placeholder="Contoh: 12345678"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Email</label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 text-black placeholder-gray-400 text-sm font-medium"
-              placeholder="email@kampus.ac.id"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Password</label>
-            <input
-              type="password"
-              name="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-200 text-black placeholder-gray-400 text-sm font-medium"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-2 bg-indigo-600 text-white py-3.5 rounded-xl font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:transform-none flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Memproses...</span>
-              </>
-            ) : (
-              <span>Daftar Sekarang</span>
-            )}
-          </button>
-        </form>
-
-        {formData.role === 'mahasiswa' && (
-          <>
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400 font-medium">Atau daftar dengan</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4 items-center w-full">
-              <button
-                type="button"
-                onClick={() => login()}
-                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-bold shadow-sm hover:bg-gray-50 hover:shadow-md transition-all duration-200"
-              >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" className="w-5 h-5" />
-                Daftar dengan Google
-              </button>
-            </div>
-          </>
-        )}
-
-        <div className="mt-8 text-center text-sm text-gray-500 font-medium">
-          <p>
-            Sudah punya akun?{" "}
-            <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-500 transition-colors">
-              Masuk di sini
-            </Link>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+            Buat Akun
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Bergabung dengan ekosistem CampusEvent
           </p>
         </div>
+
+        <Card>
+          <CardBody className="space-y-5">
+            {error && (
+              <Callout variant="danger" title="Registrasi Gagal">
+                {error}
+              </Callout>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Nama Lengkap"
+                type="text"
+                name="nama_lengkap"
+                icon="bi-person"
+                required
+                value={formData.nama_lengkap}
+                onChange={handleChange}
+                placeholder="John Doe"
+              />
+
+              {formData.role === "mahasiswa" && (
+                <Input
+                  label="NIM"
+                  type="text"
+                  name="nim"
+                  icon="bi-hash"
+                  required={formData.role === "mahasiswa"}
+                  value={formData.nim}
+                  onChange={handleChange}
+                  placeholder="Contoh: 12345678"
+                />
+              )}
+
+              <Input
+                label="Email"
+                type="email"
+                name="email"
+                icon="bi-envelope"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="email@kampus.ac.id"
+              />
+
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                icon="bi-lock"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+              />
+
+              <Button
+                type="submit"
+                size="lg"
+                loading={loading}
+                icon="bi-person-plus"
+                className="w-full"
+              >
+                {loading ? "Memproses..." : "Daftar Sekarang"}
+              </Button>
+            </form>
+
+            {formData.role === "mahasiswa" && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="px-3 bg-white dark:bg-slate-900 text-xs font-medium text-slate-400 dark:text-slate-500">
+                      Atau daftar dengan
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  icon="bi-google"
+                  className="w-full"
+                  onClick={() => login()}
+                >
+                  Daftar dengan Google
+                </Button>
+              </>
+            )}
+
+            <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+              Sudah punya akun?{" "}
+              <Link
+                href="/login"
+                className="text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-500 transition-colors"
+              >
+                Masuk di sini
+              </Link>
+            </p>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );
@@ -239,7 +251,11 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'dummy_client_id_for_now'}>
+    <GoogleOAuthProvider
+      clientId={
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "dummy_client_id_for_now"
+      }
+    >
       <RegisterContent />
     </GoogleOAuthProvider>
   );

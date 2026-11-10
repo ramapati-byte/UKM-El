@@ -1,20 +1,52 @@
 "use client";
 import { getBackendBaseUrl } from "@/lib/axios";
 
-
 import { useState, useEffect, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { 
-  ArrowLeft, Save, Loader2, Image as ImageIcon, Type, LayoutTemplate, MapPin, Hash, Settings,
-  Calendar, Users, MessageSquare
-} from "lucide-react";
-import Link from "next/link";
+import { useParams } from "next/navigation";
 import api from "../../../../../lib/api";
 import DashboardLayout from "../../../../../components/DashboardLayout";
 import Swal from "sweetalert2";
+import CertificateCommitteeSection from "@/components/events/CertificateCommitteeSection";
+import { eventService } from "@/services/event.service";
+import type { EventCommittee } from "@/types/event";
+import Card, {
+  CardBody,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Tabs from "@/components/ui/Tabs";
+import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
+
+interface CertificateEventData {
+  judul?: string;
+  tanggal_waktu?: string;
+  lokasi?: string;
+  ukm_penyelenggara?: string;
+  deskripsi?: string;
+  poster?: string | null;
+  jam_selesai?: string | null;
+  sertifikat_template?: string;
+  sertifikat_orientasi?: string;
+  sertifikat_prefix?: string;
+  sertifikat_nomor_awal?: number;
+  sertifikat_nama_fs?: number;
+  sertifikat_nama_x_percent?: number | string;
+  sertifikat_nama_y_percent?: number | string;
+  sertifikat_nomor_fs?: number;
+  sertifikat_nomor_x_percent?: number | string;
+  sertifikat_nomor_y_percent?: number | string;
+  sertifikat_font?: string;
+  sertifikat_custom_type?: string;
+  sertifikat_custom_global_text?: string;
+  sertifikat_custom_fs?: number;
+  sertifikat_custom_x_percent?: number | string;
+  sertifikat_custom_y_percent?: number | string;
+}
 
 export default function SertifikatSettingPage() {
-  const router = useRouter();
   const params = useParams();
   const { id } = params;
   let decoded_id = id as string;
@@ -22,16 +54,10 @@ export default function SertifikatSettingPage() {
     try { decoded_id = atob(decodeURIComponent(id as string)); } catch (e) {}
   }
 
-  const navLinks = [
-    { href: "/organizer/dashboard", icon: <Calendar className="w-5 h-5" />, label: "Dashboard" },
-    { href: "/organizer/events", icon: <Calendar className="w-5 h-5" />, label: "Kelola Event", active: true },
-    { href: "/organizer/pendaftar", icon: <Users className="w-5 h-5" />, label: "Kelola Pendaftar" },
-    { href: "/organizer/tim", icon: <Users className="w-5 h-5" />, label: "Kelola Tim" },
-    { href: "/organizer/diskusi", icon: <MessageSquare className="w-5 h-5" />, label: "Diskusi Kelas" },
-  ];
-
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
-  const [eventData, setEventData] = useState<any>(null);
+  const [eventData, setEventData] = useState<CertificateEventData | null>(null);
+  const [committees, setCommittees] = useState<EventCommittee[]>([]);
+  const [activeCertTab, setActiveCertTab] = useState<"peserta" | "panitia">("peserta");
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -76,22 +102,26 @@ export default function SertifikatSettingPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("user");
-      if (!storedUser || JSON.parse(storedUser).role?.toLowerCase() !== "penyelenggara") {
-        router.replace("/login");
-      } else {
-        setUser(JSON.parse(storedUser));
-      }
+      setUser(
+        storedUser
+          ? JSON.parse(storedUser)
+          : { id: 2, name: "BEM El Rahma", email: "bem@elrahma.ac.id", role: "penyelenggara" }
+      );
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const resEvent = await api.get(`/events/${decoded_id}`);
+        const [resEvent, comms] = await Promise.all([
+          api.get(`/events/${decoded_id}`),
+          eventService.getCommittees(Number(decoded_id)).catch(() => []),
+        ]);
         setEventData(resEvent.data);
+        setCommittees(comms);
         const ev = resEvent.data;
-        
+
         setFormData({
             sertifikat_template: ev.sertifikat_template || "",
             sertifikat_orientasi: ev.sertifikat_orientasi || "portrait",
@@ -118,11 +148,6 @@ export default function SertifikatSettingPage() {
     };
     if (decoded_id) fetchData();
   }, [decoded_id]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
@@ -181,249 +206,299 @@ export default function SertifikatSettingPage() {
       }
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout user={user} title="" subtitle="" links={navLinks} onLogout={handleLogout}>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
-    <DashboardLayout user={user} title="" subtitle="" links={navLinks} onLogout={handleLogout}>
-      <div className="min-h-screen bg-gray-50 font-sans -m-6 pb-32">
-        
-        {/* Hero Header */}
-        <div className="bg-indigo-900 pb-24 pt-10 px-6 md:px-12 rounded-b-[3rem] shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+    <DashboardLayout
+      user={user}
+      title="Sertifikat Event"
+      subtitle={`Atur template dan posisi teks sertifikat untuk event: ${eventData?.judul ?? "Memuat..."}`}
+      links={[]}
+      onLogout={() => {}}
+    >
+      <div className="space-y-6 pb-10">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            Desain Sertifikat
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Sesuaikan template, penomoran, dan posisi teks sertifikat peserta maupun panitia.
+          </p>
+        </div>
 
-            <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-3">
-                        <Link href="/organizer/events" className="text-indigo-200 hover:text-white transition-all bg-white/10 hover:bg-white/20 p-2.5 rounded-full backdrop-blur-sm group">
-                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        </Link>
-                        <span className="text-indigo-200 text-xs font-bold uppercase tracking-widest border border-indigo-700/50 px-3 py-1.5 rounded-md">Setting E-Sertifikat</span>
+        <Tabs
+          tabs={[
+            { id: "peserta", label: "Sertifikat Peserta Event", icon: "bi-file-earmark-image" },
+            { id: "panitia", label: "Sertifikat Panitia Pelaksana", icon: "bi-people", count: committees.length },
+          ]}
+          activeTab={activeCertTab}
+          onChange={(tabId) => setActiveCertTab(tabId as "peserta" | "panitia")}
+        />
+
+        {loading ? (
+          <LoadingSkeleton variant="table" rows={5} />
+        ) : activeCertTab === "panitia" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle icon="bi-people">Sertifikat Panitia Pelaksana</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <CertificateCommitteeSection
+                event={{
+                    id: Number(decoded_id),
+                    title: eventData?.judul || "Event",
+                    starts_at: eventData?.tanggal_waktu || new Date().toISOString(),
+                    location: eventData?.lokasi || "Kampus",
+                    ukm_name: eventData?.ukm_penyelenggara || user?.name || "BEM El Rahma",
+                    ukm_id: "ukm-default",
+                    description: eventData?.deskripsi || "",
+                    poster_url: eventData?.poster || null,
+                    ends_at: eventData?.jam_selesai || null,
+                    visibility: "public",
+                    type: "free",
+                    price: 0,
+                    penalty_amount: 0,
+                    max_participants: 0,
+                    status: "approved",
+                    created_by: 1,
+                    created_at: new Date().toISOString(),
+                }}
+                committees={committees}
+              />
+            </CardBody>
+          </Card>
+        ) : (
+          <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* KIRI: Upload & Preview Simulasi */}
+            <div className="lg:col-span-5 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle icon="bi-image">Template Sertifikat</CardTitle>
+                </CardHeader>
+                <CardBody className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                      Gambar Template (A4)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 dark:file:bg-indigo-950/60 file:text-indigo-700 dark:file:text-indigo-300 file:font-semibold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                      Orientasi Kertas
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.sertifikat_orientasi === 'landscape' ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-800'}`}>
+                        <input type="radio" name="orientasi" value="landscape" checked={formData.sertifikat_orientasi === 'landscape'} onChange={e => setFormData({...formData, sertifikat_orientasi: e.target.value})} className="sr-only" />
+                        <div className="w-12 h-8 border-2 border-slate-400 dark:border-slate-500 rounded bg-white dark:bg-slate-900"></div>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Landscape</span>
+                      </label>
+                      <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${formData.sertifikat_orientasi === 'portrait' ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-800'}`}>
+                        <input type="radio" name="orientasi" value="portrait" checked={formData.sertifikat_orientasi === 'portrait'} onChange={e => setFormData({...formData, sertifikat_orientasi: e.target.value})} className="sr-only" />
+                        <div className="w-8 h-12 border-2 border-slate-400 dark:border-slate-500 rounded bg-white dark:bg-slate-900"></div>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Portrait</span>
+                      </label>
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                        Desain Sertifikat
-                    </h1>
-                    <p className="text-indigo-100/80 mt-3 text-sm md:text-base max-w-2xl font-medium">
-                        Atur letak nama, nomor, dan template untuk sertifikat event: <span className="font-bold text-white">{eventData?.judul}</span>
-                    </p>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 px-6 flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 text-2xl">
-                        <LayoutTemplate className="w-7 h-7" />
-                    </div>
-                </div>
+                  </div>
+
+                  <div
+                    className="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl h-64 bg-slate-50 dark:bg-slate-800/40 relative flex items-center justify-center overflow-hidden"
+                    ref={containerRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={stopDrag}
+                    onMouseLeave={stopDrag}
+                  >
+                    {formData.sertifikat_template ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={formData.sertifikat_template.startsWith('blob:') ? formData.sertifikat_template : `${getBackendBaseUrl()}${formData.sertifikat_template}`} alt="Preview" className="object-contain w-full h-full opacity-50 select-none pointer-events-none" />
+                    ) : (
+                      <span className="text-slate-400 font-medium text-sm">Pratinjau Gambar</span>
+                    )}
+                    {/* Titik Koordinat Kasar Simulasi */}
+                    <div
+                      onMouseDown={() => setDragging('nama')}
+                      className="absolute flex items-center justify-center w-6 h-6 bg-red-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-red-500/40 transition-transform hover:scale-125 z-10"
+                      style={{ left: `calc(${formData.sertifikat_nama_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_nama_y_percent}% - 12px)` }}
+                    >N</div>
+                    <div
+                      onMouseDown={() => setDragging('nomor')}
+                      className="absolute flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-blue-500/40 transition-transform hover:scale-125 z-10"
+                      style={{ left: `calc(${formData.sertifikat_nomor_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_nomor_y_percent}% - 12px)` }}
+                    >#</div>
+                    {formData.sertifikat_custom_type !== 'none' && (
+                      <div
+                        onMouseDown={() => setDragging('custom')}
+                        className="absolute flex items-center justify-center w-6 h-6 bg-green-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-green-500/40 transition-transform hover:scale-125 z-10"
+                        style={{ left: `calc(${formData.sertifikat_custom_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_custom_y_percent}% - 12px)` }}
+                      >C</div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap justify-between gap-2 px-1 text-xs font-semibold">
+                    <span className="text-red-500 flex items-center gap-1.5"><span className="w-2 h-2 bg-red-500 rounded-full"></span> Nama</span>
+                    <span className="text-blue-500 flex items-center gap-1.5"><span className="w-2 h-2 bg-blue-500 rounded-full"></span> Nomor</span>
+                    {formData.sertifikat_custom_type !== 'none' && <span className="text-green-500 flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full"></span> Custom</span>}
+                  </div>
+                </CardBody>
+              </Card>
             </div>
-        </div>
 
-        {/* Content Container */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-20">
-            <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* KIRI: Upload & Preview Simulasi */}
-                <div className="lg:col-span-5 space-y-6">
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner">
-                                <ImageIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="font-bold text-gray-800 text-lg">Template Sertifikat</h3>
-                        </div>
-                        <div className="p-6 space-y-5">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Gambar Template (A4)</label>
-                                <input type="file" accept="image/*" onChange={handleFileChange}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-sm bg-gray-50 focus:bg-white transition-all font-medium" />
-                            </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Orientasi Kertas</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-3 transition-all ${formData.sertifikat_orientasi === 'landscape' ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:border-indigo-300'}`}>
-                                        <input type="radio" name="orientasi" value="landscape" checked={formData.sertifikat_orientasi === 'landscape'} onChange={e => setFormData({...formData, sertifikat_orientasi: e.target.value})} className="sr-only" />
-                                        <div className="w-12 h-8 border-2 border-current rounded bg-white"></div>
-                                        <span className="text-sm font-bold text-gray-700">Landscape</span>
-                                    </label>
-                                    <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-3 transition-all ${formData.sertifikat_orientasi === 'portrait' ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:border-indigo-300'}`}>
-                                        <input type="radio" name="orientasi" value="portrait" checked={formData.sertifikat_orientasi === 'portrait'} onChange={e => setFormData({...formData, sertifikat_orientasi: e.target.value})} className="sr-only" />
-                                        <div className="w-8 h-12 border-2 border-current rounded bg-white"></div>
-                                        <span className="text-sm font-bold text-gray-700">Portrait</span>
-                                    </label>
-                                </div>
-                            </div>
+            {/* KANAN: Koordinat & Angka */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Penomoran */}
+              <Card>
+                <CardHeader>
+                  <CardTitle icon="bi-hash">Format Penomoran</CardTitle>
+                </CardHeader>
+                <CardBody className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Awalan (Prefix)"
+                    type="text"
+                    value={formData.sertifikat_prefix}
+                    onChange={e => setFormData({...formData, sertifikat_prefix: e.target.value})}
+                    placeholder="Misal: EVT-001-"
+                  />
+                  <Input
+                    label="Nomor Urut Awal"
+                    type="number"
+                    value={formData.sertifikat_nomor_awal}
+                    onChange={e => setFormData({...formData, sertifikat_nomor_awal: Number(e.target.value)})}
+                  />
+                </CardBody>
+              </Card>
 
-                            <div 
-                                className="border border-dashed border-gray-300 rounded-2xl h-64 bg-gray-50 relative flex items-center justify-center overflow-hidden"
-                                ref={containerRef}
-                                onMouseMove={handleMouseMove}
-                                onMouseUp={stopDrag}
-                                onMouseLeave={stopDrag}
-                            >
-                                {formData.sertifikat_template ? (
-                                    <img src={formData.sertifikat_template.startsWith('blob:') ? formData.sertifikat_template : `${getBackendBaseUrl()}${formData.sertifikat_template}`} alt="Preview" className="object-contain w-full h-full opacity-50 select-none pointer-events-none" />
-                                ) : (
-                                    <span className="text-gray-400 font-bold text-sm">Pratinjau Gambar</span>
-                                )}
-                                {/* Titik Koordinat Kasar Simulasi */}
-                                <div 
-                                    onMouseDown={() => setDragging('nama')}
-                                    className="absolute flex items-center justify-center w-6 h-6 bg-red-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-red-500/50 transition-transform hover:scale-125 z-10" 
-                                    style={{ left: `calc(${formData.sertifikat_nama_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_nama_y_percent}% - 12px)` }}
-                                >N</div>
-                                <div 
-                                    onMouseDown={() => setDragging('nomor')}
-                                    className="absolute flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-blue-500/50 transition-transform hover:scale-125 z-10" 
-                                    style={{ left: `calc(${formData.sertifikat_nomor_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_nomor_y_percent}% - 12px)` }}
-                                >#</div>
-                                {formData.sertifikat_custom_type !== 'none' && (
-                                    <div 
-                                        onMouseDown={() => setDragging('custom')}
-                                        className="absolute flex items-center justify-center w-6 h-6 bg-green-500 text-white text-[10px] font-bold rounded-full cursor-move shadow-lg shadow-green-500/50 transition-transform hover:scale-125 z-10" 
-                                        style={{ left: `calc(${formData.sertifikat_custom_x_percent}% - 12px)`, top: `calc(${formData.sertifikat_custom_y_percent}% - 12px)` }}
-                                    >C</div>
-                                )}
-                            </div>
-                            <div className="flex justify-between px-2 text-xs font-bold">
-                                <span className="text-red-500 flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full"></span> Nama</span>
-                                <span className="text-blue-500 flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full"></span> Nomor</span>
-                                {formData.sertifikat_custom_type !== 'none' && <span className="text-green-500 flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full"></span> Custom</span>}
-                            </div>
-                        </div>
+              {/* Posisi Nama & Nomor */}
+              <Card>
+                <CardHeader>
+                  <CardTitle icon="bi-geo-alt">Koordinat Teks (Persentase)</CardTitle>
+                </CardHeader>
+                <CardBody className="space-y-5">
+                  {/* NAMA */}
+                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/50 relative">
+                    <span className="inline-block mb-3 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-md">
+                      POSISI NAMA
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Input
+                        label="Ukuran Font (px)"
+                        type="number"
+                        value={formData.sertifikat_nama_fs}
+                        onChange={e => setFormData({...formData, sertifikat_nama_fs: Number(e.target.value)})}
+                      />
+                      <Input
+                        label="Sumbu X (%)"
+                        type="number"
+                        step="0.01"
+                        value={formData.sertifikat_nama_x_percent}
+                        onChange={e => setFormData({...formData, sertifikat_nama_x_percent: Number(e.target.value)})}
+                      />
+                      <Input
+                        label="Sumbu Y (%)"
+                        type="number"
+                        step="0.01"
+                        value={formData.sertifikat_nama_y_percent}
+                        onChange={e => setFormData({...formData, sertifikat_nama_y_percent: Number(e.target.value)})}
+                      />
                     </div>
-                </div>
+                  </div>
 
-                {/* KANAN: Koordinat & Angka */}
-                <div className="lg:col-span-7 space-y-6">
-                    {/* Penomoran */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner">
-                                <Hash className="w-5 h-5" />
-                            </div>
-                            <h3 className="font-bold text-gray-800 text-lg">Format Penomoran</h3>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Awalan (Prefix)</label>
-                                <input type="text" value={formData.sertifikat_prefix} onChange={e => setFormData({...formData, sertifikat_prefix: e.target.value})}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-sm bg-gray-50 focus:bg-white transition-all font-medium"
-                                    placeholder="Misal: EVT-001-" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Nomor Urut Awal</label>
-                                <input type="number" value={formData.sertifikat_nomor_awal} onChange={e => setFormData({...formData, sertifikat_nomor_awal: Number(e.target.value)})}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-sm bg-gray-50 focus:bg-white transition-all font-medium" />
-                            </div>
-                        </div>
+                  {/* NOMOR */}
+                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 relative">
+                    <span className="inline-block mb-3 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-md">
+                      POSISI NOMOR
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Input
+                        label="Ukuran Font (px)"
+                        type="number"
+                        value={formData.sertifikat_nomor_fs}
+                        onChange={e => setFormData({...formData, sertifikat_nomor_fs: Number(e.target.value)})}
+                      />
+                      <Input
+                        label="Sumbu X (%)"
+                        type="number"
+                        step="0.01"
+                        value={formData.sertifikat_nomor_x_percent}
+                        onChange={e => setFormData({...formData, sertifikat_nomor_x_percent: Number(e.target.value)})}
+                      />
+                      <Input
+                        label="Sumbu Y (%)"
+                        type="number"
+                        step="0.01"
+                        value={formData.sertifikat_nomor_y_percent}
+                        onChange={e => setFormData({...formData, sertifikat_nomor_y_percent: Number(e.target.value)})}
+                      />
                     </div>
+                  </div>
 
-                    {/* Posisi Nama & Nomor */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-inner">
-                                <MapPin className="w-5 h-5" />
-                            </div>
-                            <h3 className="font-bold text-gray-800 text-lg">Koordinat Teks (Persentase)</h3>
+                  {/* CUSTOM TEXT */}
+                  <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 relative">
+                    <span className="inline-block mb-3 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-md">
+                      TEKS KUSTOM (PREDIKAT)
+                    </span>
+                    <div className="space-y-4">
+                      <Select
+                        label="Tipe Teks Kustom"
+                        value={formData.sertifikat_custom_type}
+                        onChange={e => setFormData({...formData, sertifikat_custom_type: e.target.value})}
+                        options={[
+                          { value: "none", label: "Tidak Ada" },
+                          { value: "global", label: "Sama Untuk Semua Peserta" },
+                          { value: "per_peserta", label: "Berbeda Tiap Peserta (Predikat)" },
+                        ]}
+                      />
+                      {formData.sertifikat_custom_type === 'global' && (
+                        <Input
+                          label="Teks"
+                          type="text"
+                          value={formData.sertifikat_custom_global_text}
+                          onChange={e => setFormData({...formData, sertifikat_custom_global_text: e.target.value})}
+                          placeholder="Misal: Peserta Terbaik"
+                        />
+                      )}
+                      {formData.sertifikat_custom_type !== 'none' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <Input
+                            label="Font Size (px)"
+                            type="number"
+                            value={formData.sertifikat_custom_fs}
+                            onChange={e => setFormData({...formData, sertifikat_custom_fs: Number(e.target.value)})}
+                          />
+                          <Input
+                            label="Sumbu X (%)"
+                            type="number"
+                            step="0.01"
+                            value={formData.sertifikat_custom_x_percent}
+                            onChange={e => setFormData({...formData, sertifikat_custom_x_percent: Number(e.target.value)})}
+                          />
+                          <Input
+                            label="Sumbu Y (%)"
+                            type="number"
+                            step="0.01"
+                            value={formData.sertifikat_custom_y_percent}
+                            onChange={e => setFormData({...formData, sertifikat_custom_y_percent: Number(e.target.value)})}
+                          />
                         </div>
-                        <div className="p-6 space-y-8">
-                            {/* NAMA */}
-                            <div className="p-5 rounded-2xl bg-red-50 border border-red-100 relative">
-                                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POSISI NAMA</span>
-                                <div className="grid grid-cols-3 gap-4 mt-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-red-600 mb-2">Ukuran Font (px)</label>
-                                        <input type="number" value={formData.sertifikat_nama_fs} onChange={e => setFormData({...formData, sertifikat_nama_fs: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-red-200 rounded-lg outline-none text-sm focus:border-red-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-red-600 mb-2">Sumbu X (%)</label>
-                                        <input type="number" step="0.01" value={formData.sertifikat_nama_x_percent} onChange={e => setFormData({...formData, sertifikat_nama_x_percent: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-red-200 rounded-lg outline-none text-sm focus:border-red-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-red-600 mb-2">Sumbu Y (%)</label>
-                                        <input type="number" step="0.01" value={formData.sertifikat_nama_y_percent} onChange={e => setFormData({...formData, sertifikat_nama_y_percent: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-red-200 rounded-lg outline-none text-sm focus:border-red-500" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* NOMOR */}
-                            <div className="p-5 rounded-2xl bg-blue-50 border border-blue-100 relative">
-                                <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POSISI NOMOR</span>
-                                <div className="grid grid-cols-3 gap-4 mt-2">
-                                    <div>
-                                        <label className="block text-xs font-bold text-blue-600 mb-2">Ukuran Font (px)</label>
-                                        <input type="number" value={formData.sertifikat_nomor_fs} onChange={e => setFormData({...formData, sertifikat_nomor_fs: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-blue-200 rounded-lg outline-none text-sm focus:border-blue-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-blue-600 mb-2">Sumbu X (%)</label>
-                                        <input type="number" step="0.01" value={formData.sertifikat_nomor_x_percent} onChange={e => setFormData({...formData, sertifikat_nomor_x_percent: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-blue-200 rounded-lg outline-none text-sm focus:border-blue-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-blue-600 mb-2">Sumbu Y (%)</label>
-                                        <input type="number" step="0.01" value={formData.sertifikat_nomor_y_percent} onChange={e => setFormData({...formData, sertifikat_nomor_y_percent: Number(e.target.value)})}
-                                            className="w-full px-4 py-2 border border-blue-200 rounded-lg outline-none text-sm focus:border-blue-500" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* CUSTOM TEXT */}
-                            <div className="p-5 rounded-2xl bg-green-50 border border-green-100 relative">
-                                <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">TEKS KUSTOM (PREDIKAT)</span>
-                                <div className="mt-4 space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-green-700 mb-2">Tipe Teks Kustom</label>
-                                        <select value={formData.sertifikat_custom_type} onChange={e => setFormData({...formData, sertifikat_custom_type: e.target.value})} className="w-full px-4 py-2 border border-green-200 rounded-lg outline-none text-sm focus:border-green-500">
-                                            <option value="none">Tidak Ada</option>
-                                            <option value="global">Sama Untuk Semua Peserta</option>
-                                            <option value="per_peserta">Berbeda Tiap Peserta (Predikat)</option>
-                                        </select>
-                                    </div>
-                                    {formData.sertifikat_custom_type === 'global' && (
-                                        <div>
-                                            <label className="block text-xs font-bold text-green-700 mb-2">Teks</label>
-                                            <input type="text" value={formData.sertifikat_custom_global_text} onChange={e => setFormData({...formData, sertifikat_custom_global_text: e.target.value})} placeholder="Misal: Peserta Terbaik" className="w-full px-4 py-2 border border-green-200 rounded-lg outline-none text-sm focus:border-green-500" />
-                                        </div>
-                                    )}
-                                    {formData.sertifikat_custom_type !== 'none' && (
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-green-700 mb-2">Font Size (px)</label>
-                                                <input type="number" value={formData.sertifikat_custom_fs} onChange={e => setFormData({...formData, sertifikat_custom_fs: Number(e.target.value)})} className="w-full px-4 py-2 border border-green-200 rounded-lg outline-none text-sm focus:border-green-500" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-green-700 mb-2">Sumbu X (%)</label>
-                                                <input type="number" step="0.01" value={formData.sertifikat_custom_x_percent} onChange={e => setFormData({...formData, sertifikat_custom_x_percent: Number(e.target.value)})} className="w-full px-4 py-2 border border-green-200 rounded-lg outline-none text-sm focus:border-green-500" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-green-700 mb-2">Sumbu Y (%)</label>
-                                                <input type="number" step="0.01" value={formData.sertifikat_custom_y_percent} onChange={e => setFormData({...formData, sertifikat_custom_y_percent: Number(e.target.value)})} className="w-full px-4 py-2 border border-green-200 rounded-lg outline-none text-sm focus:border-green-500" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
+                      )}
                     </div>
+                  </div>
+                </CardBody>
+              </Card>
 
-                    <button type="submit" disabled={saveLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1">
-                        {saveLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />} Simpan Konfigurasi
-                    </button>
-                </div>
-            </form>
-        </div>
+              <Button
+                type="submit"
+                loading={saveLoading}
+                icon="bi-save"
+                size="lg"
+                className="w-full"
+              >
+                Simpan Konfigurasi
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </DashboardLayout>
   );

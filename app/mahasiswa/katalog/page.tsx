@@ -1,27 +1,34 @@
 "use client";
-import { getBackendBaseUrl } from "@/lib/axios";
-
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Calendar, MapPin, Loader2, CheckCircle } from "lucide-react";
 import MahasiswaLayout from "../../../components/MahasiswaLayout";
+import Card, { CardBody } from "../../../components/ui/Card";
+import Badge from "../../../components/ui/Badge";
+import EmptyState from "../../../components/ui/EmptyState";
+import LoadingSkeleton from "../../../components/ui/LoadingSkeleton";
+import { getBackendBaseUrl } from "@/lib/axios";
 import api from "../../../lib/api";
 
+interface KatalogEvent {
+  id: number;
+  judul: string;
+  deskripsi?: string;
+  poster: string | null;
+  tanggal_waktu: string;
+  lokasi: string;
+  visibilitas?: string;
+  tipe_event?: string;
+  harga: number;
+  ukm_penyelenggara?: string;
+  is_registered?: number;
+}
+
 export default function KatalogEventPage() {
-  const router = useRouter();
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<KatalogEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTipe, setFilterTipe] = useState("all");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user");
-      if (!stored || JSON.parse(stored).role !== "mahasiswa") router.replace("/login");
-    }
-  }, [router]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -32,8 +39,11 @@ export default function KatalogEventPage() {
         if (filterTipe !== "all") params.set("tipe", filterTipe);
         const res = await api.get(`/mahasiswa/katalog?${params.toString()}`);
         setEvents(res.data);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     const debounce = setTimeout(fetchEvents, 400);
@@ -42,116 +52,132 @@ export default function KatalogEventPage() {
 
   return (
     <MahasiswaLayout>
-      <div className="pb-20">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 pb-28 pt-10 px-6 md:px-12 rounded-b-[3rem] shadow-xl relative overflow-hidden -mx-4 md:-mx-8 -mt-8 mb-12">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-800 rounded-full opacity-50 blur-3xl" />
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-amber-500 rounded-full opacity-20 blur-2xl" />
-          <div className="max-w-6xl mx-auto px-4 relative z-10 text-center">
-            <span className="text-indigo-200 text-xs font-bold uppercase tracking-widest border border-indigo-700/50 px-3 py-1 rounded-full bg-indigo-800/50 backdrop-blur-md">
-              Agenda Kampus
-            </span>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white mt-4 leading-tight mb-4">Jelajahi Event Seru</h1>
-            <p className="text-indigo-100/90 text-sm md:text-base max-w-xl mx-auto">
-              Temukan berbagai kegiatan bermanfaat, workshop, dan seminar untuk meningkatkan kapasitas diri.
-            </p>
+      <div className="space-y-6 pb-10">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-grow relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i className="bi bi-search text-slate-400" aria-hidden="true" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Cari judul event, topik, atau lokasi..."
+              className="block w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
+            />
           </div>
+          <select
+            value={filterTipe}
+            onChange={(e) => setFilterTipe(e.target.value)}
+            className="md:min-w-[180px] px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 cursor-pointer"
+          >
+            <option value="all">Semua Tipe</option>
+            <option value="gratis">Gratis (Free)</option>
+            <option value="berbayar">Berbayar (Paid)</option>
+          </select>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-20 relative z-20 space-y-8">
-          {/* Search & Filter */}
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-grow relative">
-                <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
-                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
-                  placeholder="Cari judul event, topik, atau lokasi..." />
-              </div>
-              <select value={filterTipe} onChange={(e) => setFilterTipe(e.target.value)}
-                className="min-w-[180px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium appearance-none cursor-pointer">
-                <option value="all">Semua Tipe</option>
-                <option value="gratis">Gratis (Free)</option>
-                <option value="berbayar">Berbayar (Paid)</option>
-              </select>
-            </div>
-          </div>
+        {loading ? (
+          <LoadingSkeleton variant="card" count={6} />
+        ) : events.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {events.map((row) => {
+              const isFree = row.tipe_event === "gratis" || row.harga <= 0;
+              const isRegistered = Number(row.is_registered) > 0;
+              return (
+                <Card key={row.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
+                  <div className="h-44 bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+                    {row.poster ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={`${getBackendBaseUrl()}/uploads/${row.poster}`}
+                        alt={row.judul}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
+                        <i className="bi bi-calendar-event text-4xl text-indigo-300 dark:text-indigo-700" aria-hidden="true" />
+                      </div>
+                    )}
 
-          {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div>
-          ) : events.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((row: any) => {
-                const isFree = row.tipe_event === "gratis" || row.harga <= 0;
-                const isRegistered = row.is_registered > 0;
-                return (
-                  <div key={row.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full hover:-translate-y-1 relative">
-                    <div className="h-48 bg-slate-200 relative overflow-hidden">
-                      {row.poster ? (
-                        <img src={`${getBackendBaseUrl()}/uploads/${row.poster}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-700 to-indigo-900 flex items-center justify-center">
-                          <Calendar className="w-10 h-10 text-white/30" />
-                        </div>
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <Badge variant="secondary" size="sm">
+                        {row.visibilitas ? row.visibilitas.toUpperCase() : "PUBLIC"}
+                      </Badge>
+                      {isRegistered && (
+                        <Badge variant="success" size="sm" dot>
+                          Terdaftar
+                        </Badge>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                      <div className="absolute top-4 left-4 flex gap-2">
-                        <span className="bg-white/90 backdrop-blur text-indigo-900 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide">
-                          {row.visibilitas?.toUpperCase()}
-                        </span>
-                        {isRegistered && (
-                          <span className="bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Terdaftar
-                          </span>
-                        )}
-                      </div>
-                      <div className="absolute top-4 right-4">
-                        <span className={`text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/20 ${isFree ? "bg-blue-500 text-white" : "bg-amber-400 text-amber-900"}`}>
-                          {isFree ? "FREE" : `Rp ${Number(row.harga).toLocaleString("id-ID")}`}
-                        </span>
-                      </div>
                     </div>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <div className="flex items-center gap-4 text-xs text-slate-500 mb-3 font-medium">
-                        <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md">
-                          <Calendar className="w-3 h-3 text-amber-500" />
-                          {new Date(row.tanggal_waktu).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md truncate max-w-[120px]">
-                          <MapPin className="w-3 h-3 text-indigo-500" />
-                          <span className="truncate">{row.lokasi}</span>
-                        </div>
-                      </div>
-                      <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
-                        {row.ukm_penyelenggara || 'Event Kampus'}
-                      </div>
-                      <h3 className="font-bold text-slate-800 text-lg leading-snug mb-2 line-clamp-2 group-hover:text-indigo-700 transition-colors">{row.judul}</h3>
-                      <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">{row.deskripsi?.substring(0, 100)}...</p>
-                      <div className="mt-auto pt-4 border-t border-slate-50">
-                        <Link href={`/mahasiswa/katalog/${row.id}`}
-                          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg text-sm">
-                          Daftar Sekarang
-                        </Link>
-                      </div>
+
+                    <div className="absolute top-3 right-3">
+                      <Badge variant={isFree ? "info" : "warning"} size="sm">
+                        {isFree ? "FREE" : `Rp ${Number(row.harga).toLocaleString("id-ID")}`}
+                      </Badge>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-slate-200">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-10 h-10 text-slate-300" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-700">Event Tidak Ditemukan</h3>
-              <p className="text-slate-500 mt-2 max-w-md mx-auto">Maaf, kami tidak menemukan event yang sesuai dengan pencarian Anda.</p>
-              <button onClick={() => { setSearchTerm(""); setFilterTipe("all"); }}
-                className="mt-6 inline-block px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700 transition text-sm">
+
+                  <CardBody className="flex-1 flex flex-col">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="bi bi-calendar3" aria-hidden="true" />
+                        {new Date(row.tanggal_waktu).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 min-w-0">
+                        <i className="bi bi-geo-alt" aria-hidden="true" />
+                        <span className="truncate max-w-[140px]">{row.lokasi}</span>
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">
+                      {row.ukm_penyelenggara || "Event Kampus"}
+                    </p>
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
+                      {row.judul}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                      {row.deskripsi ? `${row.deskripsi.substring(0, 100)}...` : ""}
+                    </p>
+
+                    <div className="mt-auto pt-4">
+                      <Link
+                        href={`/mahasiswa/katalog/${row.id}`}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium shadow-xs transition-colors"
+                      >
+                        <i className="bi bi-ticket-perforated" aria-hidden="true" />
+                        Daftar Sekarang
+                      </Link>
+                    </div>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon="bi-search"
+            title="Event Tidak Ditemukan"
+            message="Maaf, kami tidak menemukan event yang sesuai dengan pencarian Anda."
+            action={
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterTipe("all");
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+              >
+                <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
                 Reset Pencarian
               </button>
-            </div>
-          )}
-        </div>
+            }
+          />
+        )}
       </div>
     </MahasiswaLayout>
   );
