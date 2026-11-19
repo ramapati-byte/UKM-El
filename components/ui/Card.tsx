@@ -1,33 +1,38 @@
-// components/ui/Card.tsx — Komponen Card kanonik AdminLTE 4
-// Struktur: Card > CardHeader (CardTitle + CardTools) + CardBody + CardFooter
+// components/ui/Card.tsx — Modern Clean Surface Card
 
 import React from "react";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   outline?: boolean;
   outlineColor?: "primary" | "success" | "warning" | "danger" | "info";
+  hoverable?: boolean;
 }
 
-const OUTLINE_MAP = {
-  primary: "border-t-4 border-t-indigo-600",
-  success: "border-t-4 border-t-emerald-600",
-  warning: "border-t-4 border-t-amber-500",
-  danger: "border-t-4 border-t-red-600",
-  info: "border-t-4 border-t-sky-600",
+const ACCENT_STRIP_MAP = {
+  primary: "before:bg-indigo-600",
+  success: "before:bg-emerald-500",
+  warning: "before:bg-amber-500",
+  danger: "before:bg-red-500",
+  info: "before:bg-sky-500",
 };
 
 export function Card({
   children,
   outline = false,
   outlineColor = "primary",
+  hoverable = false,
   className = "",
   ...props
 }: CardProps) {
-  const outlineClass = outline ? OUTLINE_MAP[outlineColor] : "";
+  const accentClass = outline
+    ? `relative before:absolute before:top-0 before:left-0 before:right-0 before:h-1 ${ACCENT_STRIP_MAP[outlineColor]}`
+    : "";
 
   return (
     <div
-      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-colors ${outlineClass} ${className}`}
+      className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-xs overflow-hidden transition-all duration-200 ${
+        hoverable ? "hover:shadow-md hover:-translate-y-0.5" : ""
+      } ${accentClass} ${className}`}
       {...props}
     >
       {children}
@@ -42,7 +47,7 @@ export function CardHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 ${className}`}
+      className={`px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-4 ${className}`}
       {...props}
     >
       {children}
@@ -58,10 +63,14 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement> & { icon?: string }) {
   return (
     <h3
-      className={`text-base font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2 m-0 ${className}`}
+      className={`text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2.5 m-0 leading-tight ${className}`}
       {...props}
     >
-      {icon && <i className={`bi ${icon} text-indigo-600 dark:text-indigo-400`} aria-hidden="true" />}
+      {icon && (
+        <span className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 text-sm">
+          <i className={`bi ${icon}`} aria-hidden="true" />
+        </span>
+      )}
       <span>{children}</span>
     </h3>
   );
@@ -85,7 +94,7 @@ export function CardBody({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-5 ${className}`} {...props}>
+    <div className={`p-6 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -98,7 +107,7 @@ export function CardFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`px-5 py-3.5 bg-slate-50/70 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 ${className}`}
+      className={`px-6 py-3.5 bg-slate-50/60 dark:bg-slate-850/60 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 ${className}`}
       {...props}
     >
       {children}

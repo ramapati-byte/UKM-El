@@ -42,6 +42,7 @@ export interface UkmCreatePayload {
   kontakPerson?: string;
   email?: string;
   noHp?: string;
+  mediaSosial?: Record<string, string>;
   alamat?: string;
 }
 

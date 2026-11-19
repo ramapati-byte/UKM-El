@@ -9,6 +9,7 @@ import type {
   LoanCreatePayload,
   LoanApprovalPayload,
   InventoryService,
+  InventoryCondition,
 } from "../types/inventory";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_INVENTORY_ITEMS, MOCK_INVENTORY_LOANS } from "../mocks/inventory.mock";
@@ -119,11 +120,11 @@ class InventoryMockService implements InventoryService {
     return { ...this.loans[idx] };
   }
 
-  async returnLoan(id: string, kondisi: string, catatan?: string): Promise<InventoryLoan> {
+  async returnLoan(id: string, kondisi: InventoryCondition, catatan?: string): Promise<InventoryLoan> {
     const idx = this.loans.findIndex((l) => l.id === id);
     if (idx === -1) throw new Error("Pinjaman tidak ditemukan");
     this.loans[idx].status = "dikembalikan";
-    this.loans[idx].kondisiCheckin = kondisi as any;
+    this.loans[idx].kondisiCheckin = kondisi;
     this.loans[idx].catatanCheckin = catatan;
     this.loans[idx].tanggalKembaliRealisasi = new Date().toISOString();
     this.loans[idx].updatedAt = new Date().toISOString();

@@ -1,5 +1,4 @@
-// components/MahasiswaLayout.tsx — Adapter UI lama ke AppShell AdminLTE 4
-// Komponen asli disimpan di backup/ui-lama/MahasiswaLayout.tsx.bak
+// components/MahasiswaLayout.tsx — Modern Student Portal Layout Adapter
 
 "use client";
 
@@ -16,6 +15,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/mahasiswa/transaksi": "Transaksi",
   "/mahasiswa/sertifikat": "Sertifikat",
   "/mahasiswa/diskusi": "Diskusi",
+  "/mahasiswa/kartu-anggota": "Kartu Anggota",
   "/mahasiswa/profil": "Profil Saya",
   "/mahasiswa/kuesioner": "Kuesioner",
   "/mahasiswa/kelola-pendaftar": "Kelola Pendaftar",
@@ -58,9 +58,13 @@ export default function MahasiswaLayout({ children }: { children: React.ReactNod
     },
     {
       section: "AKTIVITAS",
-      items: [{ href: "/mahasiswa/tiket", icon: "bi-activity", label: "Aktivitas" }],
+      items: [
+        { href: "/mahasiswa/tiket", icon: "bi-activity", label: "Aktivitas" },
+        { href: "/mahasiswa/sertifikat", icon: "bi-award", label: "Sertifikat" },
+        { href: "/mahasiswa/transaksi", icon: "bi-receipt", label: "Transaksi" },
+      ],
     },
-    ...(isPanitia
+    ...(isPanitia || pathname.startsWith("/mahasiswa/kelola-pendaftar")
       ? [
           {
             section: "KEPANITIAAN",
@@ -70,6 +74,16 @@ export default function MahasiswaLayout({ children }: { children: React.ReactNod
           },
         ]
       : []),
+    {
+      section: "KEANGGOTAAN",
+      items: [
+        { href: "/mahasiswa/kartu-anggota", icon: "bi-credit-card-2-front", label: "Kartu Anggota" },
+      ],
+    },
+    {
+      section: "KOMUNIKASI",
+      items: [{ href: "/mahasiswa/diskusi", icon: "bi-chat-dots", label: "Diskusi" }],
+    },
     {
       section: "AKUN",
       items: [{ href: "/mahasiswa/profil", icon: "bi-person", label: "Profil Saya" }],

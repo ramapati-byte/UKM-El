@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
@@ -10,11 +10,18 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Badge from "@/components/ui/Badge";
 import { ukmService } from "@/services/ukm.service";
-import type { UkmEntity, UkmQuery } from "@/types/ukm";
-import { usePermission } from "@/hooks/usePermission";
-import { useOrg } from "@/hooks/useOrg";
+import type { UkmEntity, UkmQuery, UkmCategory, UkmStatus } from "@/types/ukm";
+import type { BadgeVariant } from "@/types/common";
 
-const statusBadge: Record<string, string> = {
+interface UkmRow {
+  id: string;
+  nama: string;
+  ukmSlug: string;
+  kategori: string;
+  status: UkmStatus;
+}
+
+const statusBadgeMap: Record<UkmStatus, BadgeVariant> = {
   verified: "success",
   pending: "warning",
   rejected: "danger",
@@ -22,37 +29,36 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function UkmListPage() {
-  const { can } = usePermission("superadmin");
-  const { ukmId } = useOrg();
   const [ukms, setUkms] = useState<UkmEntity[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<{ nama: string; ukmSlug: string; kategori: string }>({
+  const [form, setForm] = useState<{ nama: string; ukmSlug: string; kategori: UkmCategory }>({
     nama: "",
     ukmSlug: "",
     kategori: "bem",
   });
-  const [query, setQuery] = useState<UkmQuery>({ page: 1, limit: 10 });
+  const [query] = useState<UkmQuery>({ page: 1, limit: 10 });
 
-  useEffect(() => {
-    load();
-  }, [query]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await ukmService.list(query);
       setUkms(res.data);
       setTotal(res.total);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Gagal memuat data UKM");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal memuat data UKM";
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [query]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,13 +66,14 @@ export default function UkmListPage() {
       await ukmService.create({
         nama: form.nama,
         ukmSlug: form.ukmSlug,
-        kategori: form.kategori as any,
+        kategori: form.kategori,
       });
       setOpen(false);
       setForm({ nama: "", ukmSlug: "", kategori: "bem" });
       load();
-    } catch (err: any) {
-      setError(err.message || "Gagal membuat UKM");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal membuat UKM";
+      setError(message);
     }
   };
 
@@ -75,18 +82,19 @@ export default function UkmListPage() {
     try {
       await ukmService.verify(id, { status });
       load();
-    } catch (err: any) {
-      setError(err.message || "Gagal memverifikasi UKM");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal memverifikasi UKM";
+      setError(message);
     }
   };
 
   return (
-    <AppShell title="Manajemen UKM" subtitle="Kelola data UKM terverifikasi">
+    <AppShell title="Manajemen UKM" subtitle="Kelola data UKM terverifikasi" role="superadmin">
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">Memuat data...</div>
       ) : error ? (
         <div className="p-6 text-center">
-          <p className="text-danger">{error}</p>
+          <p className="text-danger mb-4">{error}</p>
           <Button onClick={load}>Coba Lagi</Button>
         </div>
       ) : (
@@ -95,12 +103,20 @@ export default function UkmListPage() {
             <PageHeader title="Daftar UKM" actions={
               <Button onClick={() => setOpen(true)}>+ Tambah UKM</Button>
             } />
-            <DataTable
+            <DataTable<UkmRow>
               columns={[
                 { key: "nama", label: "Nama UKM" },
                 { key: "ukmSlug", label: "Slug" },
                 { key: "kategori", label: "Kategori" },
-                { key: "status", label: "Status" },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (row) => (
+                    <Badge variant={statusBadgeMap[row.status] ?? "secondary"} dot>
+                      {row.status}
+                    </Badge>
+                  ),
+                },
               ]}
               data={ukms.map((u) => ({
                 id: u.id,
@@ -111,14 +127,18 @@ export default function UkmListPage() {
               }))}
               rowActions={[
                 {
-                  label: (row: any) => row.status === "pending" ? "Setujui" : "Lihat",
-                  onClick: (row: any) => {
-                    if (row.status === "pending") handleVerify(row.id, "verified");
+                  label: (row: UkmRow) => row.status === "pending" ? "Setujui" : "Detail",
+                  onClick: (row: UkmRow) => {
+                    if (row.status === "pending") {
+                      handleVerify(row.id, "verified");
+                    } else {
+                      window.location.href = `/admin/ukm/${row.id}`;
+                    }
                   },
                 },
                 {
-                  label: (row: any) => row.status === "pending" ? "Tolak" : "-",
-                  onClick: (row: any) => {
+                  label: (row: UkmRow) => row.status === "pending" ? "Tolak" : "-",
+                  onClick: (row: UkmRow) => {
                     if (row.status === "pending") handleVerify(row.id, "rejected");
                   },
                   variant: "danger",
@@ -128,20 +148,20 @@ export default function UkmListPage() {
           </div>
           <div className="md:col-span-4">
             <div className="space-y-4">
-              <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Statistik</h3>
-                <div className="space-y-2">
+              <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Statistik UKM</h3>
+                <div className="space-y-2.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Total:</span>
-                    <span className="font-medium">{total}</span>
+                    <span className="text-slate-500">Total Organisasi:</span>
+                    <span className="font-semibold">{total}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Terverifikasi:</span>
-                    <span className="font-medium text-success">{ukms.filter(u => u.status === "verified").length}</span>
+                    <span className="font-semibold text-success">{ukms.filter(u => u.status === "verified").length}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Pending:</span>
-                    <span className="font-medium text-warning">{ukms.filter(u => u.status === "pending").length}</span>
+                    <span className="text-slate-500">Menunggu Verifikasi:</span>
+                    <span className="font-semibold text-warning">{ukms.filter(u => u.status === "pending").length}</span>
                   </div>
                 </div>
               </div>
@@ -153,21 +173,25 @@ export default function UkmListPage() {
       <Modal open={open} onClose={() => setOpen(false)} title="Tambah UKM Baru">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama UKM</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama UKM *</label>
             <Input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Slug URL</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Slug URL *</label>
             <Input value={form.ukmSlug} onChange={(e) => setForm({ ...form, ukmSlug: e.target.value })} placeholder="contoh: bem-elrahma" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
-            <Select value={form.kategori} onChange={(v) => setForm({ ...form, kategori: v })}>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Kategori *</label>
+            <Select value={form.kategori} onChange={(v: string) => setForm({ ...form, kategori: v as UkmCategory })}>
               <option value="bem">BEM</option>
-              <option value="himas">HIMAs</option>
-              <option value="unit">Unit</option>
-              <option value="km">KM</option>
+              <option value="himas">HIMA</option>
+              <option value="unit">Unit Kegiatan</option>
+              <option value="km">Kegiatan Mahasiswa</option>
             </Select>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Batal</Button>
+            <Button type="submit">Simpan</Button>
           </div>
         </form>
       </Modal>

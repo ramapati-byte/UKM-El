@@ -3,16 +3,18 @@
 import type {
   DashboardStats,
   DashboardService,
+  DashboardWidget,
+  TaskItem,
 } from "../types/dashboard";
 import { isMockEnabled } from "../lib/env";
-import { MOCK_DASHBOARD_STATS } from "../mocks/dashboard.mock";
+import { MOCK_DASHBOARD_STATS, MOCK_DASHBOARD_TASKS } from "../mocks/dashboard.mock";
 
 class DashboardMockService implements DashboardService {
   async getStats(ukmId?: string): Promise<DashboardStats> {
     return { ...MOCK_DASHBOARD_STATS, ukmId: ukmId ?? MOCK_DASHBOARD_STATS.ukmId };
   }
 
-  async getWidgets(_ukmId?: string): Promise<Record<string, unknown>[]> {
+  async getWidgets(_ukmId?: string): Promise<DashboardWidget[]> {
     return [
       { id: "widget-1", judul: "Total Anggota", tipe: "statcard", data: { value: MOCK_DASHBOARD_STATS.totalAnggota }, updatedAt: new Date().toISOString() },
       { id: "widget-2", judul: "Total Kegiatan", tipe: "statcard", data: { value: MOCK_DASHBOARD_STATS.totalKegiatan }, updatedAt: new Date().toISOString() },
@@ -21,8 +23,8 @@ class DashboardMockService implements DashboardService {
     ];
   }
 
-  async getTasks(_ukmId?: string): Promise<Record<string, unknown>[]> {
-    return [];
+  async getTasks(_ukmId?: string): Promise<TaskItem[]> {
+    return [...MOCK_DASHBOARD_TASKS];
   }
 
   async exportPdf(): Promise<Blob> {
@@ -38,10 +40,10 @@ class DashboardRealService implements DashboardService {
   async getStats(): Promise<DashboardStats> {
     throw new Error("Real adapter belum tersedia");
   }
-  async getWidgets(): Promise<Record<string, unknown>[]> {
+  async getWidgets(): Promise<DashboardWidget[]> {
     throw new Error("Real adapter belum tersedia");
   }
-  async getTasks(): Promise<Record<string, unknown>[]> {
+  async getTasks(): Promise<TaskItem[]> {
     throw new Error("Real adapter belum tersedia");
   }
   async exportPdf(): Promise<Blob> {

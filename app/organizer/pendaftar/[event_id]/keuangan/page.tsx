@@ -354,8 +354,8 @@ export default function KeuanganEventPage() {
             <div className="min-w-[200px]">
               <Select
                 value={filterTipe}
-                onChange={(e) => {
-                  setFilterTipe(e.target.value as typeof filterTipe);
+                onChange={(val: string) => {
+                  setFilterTipe(val as typeof filterTipe);
                   setCurrentPage(1);
                 }}
                 options={[
@@ -368,8 +368,8 @@ export default function KeuanganEventPage() {
             <div className="min-w-[200px]">
               <Select
                 value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e.target.value as typeof filterStatus);
+                onChange={(val: string) => {
+                  setFilterStatus(val as typeof filterStatus);
                   setCurrentPage(1);
                 }}
                 options={[

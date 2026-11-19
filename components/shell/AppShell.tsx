@@ -1,13 +1,14 @@
-// components/shell/AppShell.tsx — Shell aplikasi utama AdminLTE 4
-// Struktur: app-wrapper > app-sidebar + app-main (app-header + app-content-header + app-content + app-footer)
+// components/shell/AppShell.tsx — Master Application Shell (Bespoke Modern SaaS)
 
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "./Footer";
+import LegacyBanner from "../migration/LegacyBanner";
 import { getNavByRole, type NavSection } from "../../lib/navigation";
 
 export interface BreadcrumbItem {
@@ -34,7 +35,7 @@ export default function AppShell({
   actions,
   navSections,
   role,
-  brandTitle,
+  brandTitle = "BEM El Rahma",
 }: AppShellProps) {
   const [user] = useState<{
     name: string;
@@ -55,10 +56,21 @@ export default function AppShell({
       role: "penyelenggara",
     };
   });
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
-  const activeRole = role || user?.role || "penyelenggara";
+  // Role ditentukan dari segmen URL atau fallback
+  const urlRole = pathname.startsWith("/admin")
+    ? "superadmin"
+    : pathname.startsWith("/organizer")
+      ? "penyelenggara"
+      : pathname.startsWith("/mahasiswa")
+        ? "mahasiswa"
+        : null;
+
+  const activeRole = urlRole || role || user?.role || "penyelenggara";
   const sections = navSections || getNavByRole(activeRole);
 
   const handleLogout = () => {
@@ -68,86 +80,142 @@ export default function AppShell({
     }
   };
 
-  return (
-    <div className="app-wrapper flex-row min-h-screen">
-      {/* Sidebar Region */}
-      <Sidebar
-        sections={sections}
-        collapsed={collapsed}
-        mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
-        brandTitle={brandTitle}
-      />
+  // Primary links untuk Mobile Bottom Navigation (ambil 4-5 item pertama dari menu)
+  const mobileBottomItems = sections.flatMap((s) => s.items).slice(0, 5);
 
-      {/* Main Region */}
-      <div className="app-main flex-1 flex flex-col min-w-0">
-        {/* Header Region */}
-        <Header
+  return (
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      {/* Shell Container */}
+      <div className="flex-1 flex flex-row min-h-screen relative overflow-x-hidden">
+        {/* Sidebar Component */}
+        <Sidebar
+          sections={sections}
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+          onCloseMobile={() => setMobileOpen(false)}
+          brandTitle={brandTitle}
+          userRole={activeRole}
           user={user}
-          onToggleSidebar={() => setCollapsed((v) => !v)}
-          onToggleMobile={() => setMobileOpen((v) => !v)}
-          onLogout={handleLogout}
-          title={title}
-          subtitle={subtitle}
         />
 
-        {/* Content Header (Breadcrumbs & Page Title + Actions) */}
-        {(title || breadcrumbs || actions) && (
-          <div className="app-content-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              {/* Breadcrumbs */}
-              {breadcrumbs && breadcrumbs.length > 0 && (
-                <nav aria-label="Breadcrumb" className="mb-1">
-                  <ol className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 p-0 m-0 list-none">
-                    <li>
-                      <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                        <i className="bi bi-house-door" aria-hidden="true" />
-                      </Link>
-                    </li>
-                    {breadcrumbs.map((b, idx) => (
-                      <li key={idx} className="flex items-center gap-1.5">
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
-                        {b.href ? (
-                          <Link href={b.href} className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                            {b.label}
-                          </Link>
-                        ) : (
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            {b.label}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ol>
-                </nav>
-              )}
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+          {/* Header */}
+          <Header
+            user={user}
+            onToggleMobile={() => setMobileOpen(true)}
+            onLogout={handleLogout}
+            title={title}
+            subtitle={subtitle}
+            actions={actions}
+          />
 
-              {/* Title & Subtitle */}
-              {title && (
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                  {title}
-                </h1>
-              )}
-              {subtitle && (
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  {subtitle}
-                </p>
+          {/* Legacy Migration Banner if enabled */}
+          <LegacyBanner />
+
+          {/* Page Content Header (Breadcrumbs + Title + Action Buttons) */}
+          {(breadcrumbs || (title && !subtitle)) && (
+            <div className="px-4 sm:px-6 lg:px-8 pt-5 pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                {/* Breadcrumbs */}
+                {breadcrumbs && breadcrumbs.length > 0 && (
+                  <nav aria-label="Breadcrumb" className="mb-1.5">
+                    <ol className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 p-0 m-0 list-none">
+                      <li>
+                        <Link
+                          href="/"
+                          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                          <i className="bi bi-house-door" aria-hidden="true" />
+                        </Link>
+                      </li>
+                      {breadcrumbs.map((b, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <span className="text-slate-300 dark:text-slate-600">/</span>
+                          {b.href ? (
+                            <Link
+                              href={b.href}
+                              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                            >
+                              {b.label}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {b.label}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
+                )}
+              </div>
+
+              {actions && (
+                <div className="flex items-center gap-2 shrink-0">{actions}</div>
               )}
             </div>
+          )}
 
-            {/* Actions Slot */}
-            {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
-          </div>
-        )}
+          {/* Main Body */}
+          <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-8 w-full max-w-7xl mx-auto">
+            {children}
+          </main>
 
-        {/* Content Region (Container-fluid) */}
-        <main className="app-content flex-1">
-          <div className="w-full">{children}</div>
-        </main>
-
-        {/* Footer Region */}
-        <Footer />
+          {/* Footer */}
+          <Footer />
+        </div>
       </div>
+
+      {/* MOBILE BOTTOM NAVIGATION BAR (mirip fitur favorit di desain lama) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 z-40 flex justify-around items-center h-16 px-1 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+        {mobileBottomItems.map((item, index) => {
+          const isActive =
+            pathname === item.href ||
+            (pathname.startsWith(item.href) &&
+              item.href !== "/organizer/dashboard" &&
+              item.href !== "/admin/dashboard" &&
+              item.href !== "/mahasiswa/dashboard");
+
+          return (
+            <Link
+              key={index}
+              href={item.href}
+              className={`flex flex-1 flex-col items-center justify-center h-full space-y-1 relative transition-colors ${
+                isActive
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              {/* Active top indicator pill */}
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-b-full shadow-xs" />
+              )}
+              <div className="shrink-0 flex items-center justify-center">
+                <i className={`bi ${item.icon} text-lg leading-none`} />
+              </div>
+              <span className="text-[10px] font-semibold tracking-tight truncate max-w-[62px] text-center leading-none">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+
+        {/* Menu drawer trigger if there are more items */}
+        {sections.flatMap((s) => s.items).length > 5 && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-1 flex-col items-center justify-center h-full space-y-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+          >
+            <i className="bi bi-grid text-lg leading-none" />
+            <span className="text-[10px] font-semibold tracking-tight text-center leading-none">
+              Lainnya
+            </span>
+          </button>
+        )}
+      </nav>
     </div>
   );
 }

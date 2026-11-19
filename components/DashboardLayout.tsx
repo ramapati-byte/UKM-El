@@ -1,5 +1,4 @@
-// components/DashboardLayout.tsx — Adapter UI lama ke AppShell AdminLTE 4
-// Komponen asli disimpan di backup/ui-lama/DashboardLayout.tsx.bak
+// components/DashboardLayout.tsx — Modern SaaS Dashboard Layout Adapter
 
 "use client";
 
@@ -14,7 +13,7 @@ interface NavItem {
 }
 
 interface DashboardLayoutProps {
-  user: { name: string; email: string; role: string; foto_profil?: string } | null;
+  user?: { name: string; email: string; role: string; foto_profil?: string } | null;
   title: string;
   subtitle?: string;
   links?: NavItem[];
@@ -28,7 +27,7 @@ export default function DashboardLayout({
   subtitle,
   children,
 }: DashboardLayoutProps) {
-  const role = user?.role?.toLowerCase() || "penyelenggara";
+  const role = user?.role?.toLowerCase() || undefined;
 
   return (
     <AppShell role={role} title={title} subtitle={subtitle}>

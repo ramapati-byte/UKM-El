@@ -1,4 +1,4 @@
-// components/ui/Pagination.tsx — Komponen navigasi halaman AdminLTE 4
+// components/ui/Pagination.tsx — Modern Clean Pagination Control
 
 import React from "react";
 
@@ -40,27 +40,29 @@ export default function Pagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 ${className}`}
     >
       <div>
         {totalRecords !== undefined ? (
           <span>
-            Menampilkan halaman <b>{currentPage}</b> dari <b>{totalPages}</b> (Total {totalRecords} data)
+            Menampilkan halaman <b className="text-slate-800 dark:text-slate-200">{currentPage}</b> dari{" "}
+            <b className="text-slate-800 dark:text-slate-200">{totalPages}</b> (Total {totalRecords} data)
           </span>
         ) : (
           <span>
-            Halaman <b>{currentPage}</b> dari <b>{totalPages}</b>
+            Halaman <b className="text-slate-800 dark:text-slate-200">{currentPage}</b> dari{" "}
+            <b className="text-slate-800 dark:text-slate-200">{totalPages}</b>
           </span>
         )}
       </div>
 
-      <nav aria-label="Navigasi halaman" className="flex items-center gap-1">
+      <nav aria-label="Navigasi halaman" className="flex items-center gap-1.5">
         {/* Tombol Pertama */}
         <button
           type="button"
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
+          className="p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
           aria-label="Halaman pertama"
         >
           <i className="bi bi-chevron-double-left" aria-hidden="true" />
@@ -71,7 +73,7 @@ export default function Pagination({
           type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
+          className="p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
           aria-label="Halaman sebelumnya"
         >
           <i className="bi bi-chevron-left" aria-hidden="true" />
@@ -85,10 +87,10 @@ export default function Pagination({
               key={p}
               type="button"
               onClick={() => onPageChange(p)}
-              className={`min-w-[32px] h-8 px-2 rounded-lg font-semibold transition ${
+              className={`min-w-[32px] h-8 px-2.5 rounded-xl text-xs font-bold transition-all ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-xs"
-                  : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-xs shadow-indigo-600/20"
+                  : "border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs"
               }`}
             >
               {p}
@@ -101,7 +103,7 @@ export default function Pagination({
           type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
+          className="p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
           aria-label="Halaman berikutnya"
         >
           <i className="bi bi-chevron-right" aria-hidden="true" />
@@ -112,7 +114,7 @@ export default function Pagination({
           type="button"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700"
+          className="p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
           aria-label="Halaman terakhir"
         >
           <i className="bi bi-chevron-double-right" aria-hidden="true" />

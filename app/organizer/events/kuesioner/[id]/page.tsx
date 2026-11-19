@@ -211,7 +211,7 @@ export default function KelolaKuesionerPage() {
                       label="Tipe Jawaban"
                       options={QUESTION_TYPE_OPTIONS}
                       value={formData.question_type}
-                      onChange={e => setFormData({...formData, question_type: e.target.value})}
+                      onChange={(val: string) => setFormData({...formData, question_type: val})}
                     />
 
                     {(formData.question_type === 'radio' || formData.question_type === 'dropdown') && (

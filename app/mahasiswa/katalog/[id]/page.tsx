@@ -465,8 +465,8 @@ export default function DetailEventPage() {
                                       label={f.label}
                                       required={!!f.is_required}
                                       value={p.jawaban_custom[f.id] || ""}
-                                      onChange={(e) =>
-                                        updateParticipant(index, f.id, e.target.value, true)
+                                      onChange={(val: string) =>
+                                        updateParticipant(index, f.id, val, true)
                                       }
                                       options={[
                                         { value: "", label: "- Pilih -" },

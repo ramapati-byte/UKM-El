@@ -483,7 +483,7 @@ export default function KelolaTimPage() {
                 label="Pilih Event"
                 required
                 value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
+                onChange={(val: string) => setSelectedEventId(val)}
                 placeholder="-- Pilih Event --"
                 options={events.map((ev) => ({
                   value: ev.id.toString(),

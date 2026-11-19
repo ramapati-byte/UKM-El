@@ -1,4 +1,4 @@
-// components/shell/PublicShell.tsx — Shell untuk halaman publik (tanpa sidebar)
+// components/shell/PublicShell.tsx — Modern Clean Public Portal Shell
 
 "use client";
 
@@ -44,35 +44,56 @@ export default function PublicShell({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* Public Navbar */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={brandLogo}
-              alt="Logo"
-              className="w-8 h-8 object-contain shrink-0 rounded"
-            />
-            <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100">
-              {brandTitle}
-            </span>
+      <header className="sticky top-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500/10 to-indigo-600/20 dark:from-indigo-900/30 dark:to-indigo-800/40 border border-indigo-100 dark:border-indigo-800/60 flex items-center justify-center p-1.5 shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={brandLogo}
+                alt="Logo"
+                className="w-full h-full object-contain drop-shadow-xs"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {brandTitle}
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase">
+                BEM El Rahma
+              </span>
+            </div>
           </Link>
 
-          <nav className="flex items-center gap-3">
+          <nav className="flex items-center gap-2 sm:gap-4">
             <Link
               href="/events"
-              className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-1.5 rounded-lg"
+              className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
             >
               Katalog Event
+            </Link>
+
+            <Link
+              href="/ukm"
+              className="hidden sm:inline-flex text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
+            >
+              Direktori UKM
+            </Link>
+
+            <Link
+              href="/berita"
+              className="hidden sm:inline-flex text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-colors"
+            >
+              Berita
             </Link>
 
             {/* Theme Toggle */}
             <button
               type="button"
               onClick={handleToggleTheme}
-              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none"
               title={`Ganti tema (${theme})`}
               aria-label="Ganti tema"
             >
@@ -89,14 +110,14 @@ export default function PublicShell({
             {user ? (
               <Link
                 href={getDashboardHref()}
-                className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-xs"
+                className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 shadow-sm shadow-indigo-600/20 transition-all active:scale-[0.98]"
               >
                 <i className="bi bi-speedometer2" aria-hidden="true" /> Dashboard
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-xs"
+                className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 shadow-sm shadow-indigo-600/20 transition-all active:scale-[0.98]"
               >
                 <i className="bi bi-box-arrow-in-right" aria-hidden="true" /> Masuk
               </Link>
@@ -108,7 +129,7 @@ export default function PublicShell({
       {/* Main Content */}
       <main className="flex-1 w-full">{children}</main>
 
-      {/* Public Footer */}
+      {/* Footer */}
       <Footer />
     </div>
   );

@@ -99,6 +99,7 @@ export const ADMIN_NAV: NavSection[] = [
     section: "LAPORAN",
     items: [
       { href: "/admin/ranking", icon: "bi-trophy", label: "Peringkat UKM", permission: "ranking.view" },
+      { href: "/admin/arsip", icon: "bi-archive", label: "Arsip Legacy" },
     ],
   },
 ];
@@ -117,6 +118,15 @@ export const MAHASISWA_NAV: NavSection[] = [
     section: "AKTIVITAS",
     items: [
       { href: "/mahasiswa/tiket", icon: "bi-activity", label: "Aktivitas" },
+      { href: "/mahasiswa/kelola-pendaftar", icon: "bi-clipboard-check", label: "Kelola Pendaftar" },
+      { href: "/mahasiswa/sertifikat", icon: "bi-award", label: "Sertifikat" },
+      { href: "/mahasiswa/transaksi", icon: "bi-receipt", label: "Transaksi" },
+    ],
+  },
+  {
+    section: "KOMUNIKASI",
+    items: [
+      { href: "/mahasiswa/diskusi", icon: "bi-chat-dots", label: "Diskusi" },
     ],
   },
   {

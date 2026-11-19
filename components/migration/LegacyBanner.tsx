@@ -2,16 +2,17 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { isLegacyModeEnabled } from "../../lib/env";
 
 export default function LegacyBanner() {
   const [visible, setVisible] = useState(true);
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    const d = localStorage.getItem("legacy_banner_dismissed");
-    if (d === "true") setDismissed(true);
-  }, []);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("legacy_banner_dismissed") === "true";
+    }
+    return false;
+  });
 
   const handleDismiss = () => {
     localStorage.setItem("legacy_banner_dismissed", "true");
@@ -19,7 +20,7 @@ export default function LegacyBanner() {
     setVisible(false);
   };
 
-  if (dismissed || !visible) return null;
+  if (!isLegacyModeEnabled() || dismissed || !visible) return null;
 
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 py-3 flex items-center justify-between">

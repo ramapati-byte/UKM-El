@@ -1,14 +1,12 @@
 // types/dashboard.ts — Tipe domain Dasbor & Pelaporan (FE-9)
 
-import type { BaseQuery } from "./common";
-
 export type WidgetType = "statcard" | "chart" | "tasklist" | "progress";
 
 export interface DashboardWidget {
   id: string;
   judul: string;
   tipe: WidgetType;
-  data: any;
+  data: Record<string, unknown>;
   updatedAt: string;
 }
 

@@ -15,13 +15,13 @@ export interface FinanceTransaction {
   nominal: number;
   deskripsi: string;
   tanggalTransaksi: string;
-  buktiFile?: string;
+  buktiFile?: string | null;
   ukmId: string;
-  kegiatanId?: string;
+  kegiatanId?: string | null;
   createdBy: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  catatan?: string;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  catatan?: string | null;
   createdAt: string;
   updatedAt: string;
 }

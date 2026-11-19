@@ -6,6 +6,7 @@ import type {
   DocumentQuery,
   DocumentVersion,
   DocumentService,
+  DocumentType,
 } from "../types/document";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_DOCUMENT_FOLDERS, MOCK_DOCUMENTS, MOCK_DOCUMENT_VERSIONS } from "../mocks/document.mock";
@@ -44,7 +45,7 @@ class DocumentMockService implements DocumentService {
     const doc: DocumentEntity = {
       id,
       judul: formData.get("judul")?.toString() ?? "Dokumen baru",
-      tipe: "lainnya" as any,
+      tipe: (formData.get("tipe")?.toString() as DocumentType) || "lainnya",
       fileUrl: `/uploads/documents/${id}.pdf`,
       ukuranFile: 102400,
       versi: 1,
@@ -58,7 +59,7 @@ class DocumentMockService implements DocumentService {
     return doc;
   }
 
-  async download(id: string): Promise<Blob> {
+  async download(_id: string): Promise<Blob> {
     return new Blob(["File content"], { type: "application/pdf" });
   }
 

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import {
   getActiveUkId,
   setActiveUkId,
@@ -12,18 +12,18 @@ import {
   isMultiTenantEnabled,
 } from "../lib/tenant";
 
-export function useOrg() {
-  const [ukmId, setUkmIdState] = useState<string | null>(null);
-  const [ukmSlug, setUkmSlugState] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    const id = getActiveUkId();
-    const slug = getActiveUkSlug();
-    setUkmIdState(id);
-    setUkmSlugState(slug);
-    setLoaded(true);
-  }, []);
+export function useOrg() {
+  const loaded = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [ukmId, setUkmIdState] = useState<string | null>(() => {
+    if (typeof window !== "undefined") return getActiveUkId();
+    return null;
+  });
+  const [ukmSlug, setUkmSlugState] = useState<string | null>(() => {
+    if (typeof window !== "undefined") return getActiveUkSlug();
+    return null;
+  });
 
   const setUk = useCallback((id: string, slug: string) => {
     setActiveUkId(id);

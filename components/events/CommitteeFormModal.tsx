@@ -239,7 +239,7 @@ export default function CommitteeFormModal({
           required
           options={ROLE_OPTIONS}
           value={role}
-          onChange={(e) => setRole(e.target.value)}
+          onChange={(val: string) => setRole(val)}
         />
 
         {/* 3. Divisi */}
@@ -248,7 +248,7 @@ export default function CommitteeFormModal({
           required
           options={DIVISION_OPTIONS}
           value={division}
-          onChange={(e) => setDivision(e.target.value)}
+          onChange={(val: string) => setDivision(val)}
         />
       </form>
     </Modal>

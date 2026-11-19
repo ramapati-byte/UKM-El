@@ -76,11 +76,3 @@ export const MOCK_NOTIFICATIONS: NotificationEntity[] = [
     dibuatPada: "2026-11-01T09:00:00",
   },
 ];
-
-export const MOCK_DASHBOARD_STATS = {
-  totalAnggota: 45,
-  totalKegiatan: 12,
-  totalAnggaran: 5250000,
-  tugasTertunda: 3,
-  ukmId: "ukm-bem",
-};

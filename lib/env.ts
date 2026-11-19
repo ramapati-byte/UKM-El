@@ -48,3 +48,14 @@ export function isMultiTenantEnabled(): boolean {
   }
   return false; // default nonaktif
 }
+
+/** Apakah mode migrasi legacy read-only diaktifkan */
+export function isLegacyModeEnabled(): boolean {
+  if (
+    typeof process !== "undefined" &&
+    process.env.NEXT_PUBLIC_ENABLE_LEGACY_MODE
+  ) {
+    return process.env.NEXT_PUBLIC_ENABLE_LEGACY_MODE === "true";
+  }
+  return false; // default nonaktif
+}

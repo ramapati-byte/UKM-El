@@ -23,11 +23,12 @@ export function useFetch<T>() {
       const result = await fn();
       setState({ data: result, loading: false, error: null });
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Terjadi kesalahan";
       setState({
         data: null,
         loading: false,
-        error: err?.message || "Terjadi kesalahan",
+        error: message,
       });
       throw err;
     }

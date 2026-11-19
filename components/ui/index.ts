@@ -1,4 +1,4 @@
-// components/ui/index.ts — Barrel export untuk seluruh komponen UI AdminLTE 4
+// components/ui/index.ts — Barrel export untuk seluruh komponen UI Modern SaaS
 
 export { default as Button } from "./Button";
 export * from "./Button";

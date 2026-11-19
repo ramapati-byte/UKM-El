@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import AppShell from "@/components/shell/AppShell";
-import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { ukmService } from "@/services/ukm.service";
@@ -10,29 +9,30 @@ import type { UkmEntity } from "@/types/ukm";
 import type { BadgeVariant } from "@/types/common";
 import { usePermission } from "@/hooks/usePermission";
 
-export default function UkmDetailPage({ params: paramsProp }: { params: Promise<{ id: string }> | { id: string } }) {
-  const params = "then" in paramsProp ? use(paramsProp as Promise<{ id: string }>) : paramsProp as { id: string };
+export default function UkmDetailPage({ params: paramsProp }: { params: Promise<{ id: string }> }) {
+  const params = use(paramsProp);
   const { can } = usePermission("superadmin");
   const [ukm, setUkm] = useState<UkmEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    load();
-  }, [params.id]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await ukmService.detail(params.id);
       setUkm(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "UKM tidak ditemukan");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "UKM tidak ditemukan";
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleVerify = async (status: "verified" | "rejected") => {
     if (!ukm) return;
@@ -40,8 +40,9 @@ export default function UkmDetailPage({ params: paramsProp }: { params: Promise<
     try {
       await ukmService.verify(ukm.id, { status });
       load();
-    } catch (err: any) {
-      setError(err.message || "Gagal memverifikasi UKM");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal memverifikasi UKM";
+      setError(message);
     }
   };
 

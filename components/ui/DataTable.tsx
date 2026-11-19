@@ -1,5 +1,4 @@
-// components/ui/DataTable.tsx — Tabel data AdminLTE 4 responsif
-// Otomatis berubah menjadi card list di mobile
+// components/ui/DataTable.tsx — Modern Responsive Data Table
 
 "use client";
 
@@ -66,10 +65,10 @@ export default function DataTable<T extends Record<string, any>>({
     );
   }
 
-  const getKey = (row: T): string | number => {
+  const getKey = (row: T, idx: number): string | number => {
     if (keyExtractor) return keyExtractor(row);
     if ("id" in row) return row["id"] as string | number;
-    return Math.random();
+    return idx;
   };
 
   const getColLabel = (col: Column<T>) => col.header ?? col.label ?? col.key;
@@ -82,10 +81,14 @@ export default function DataTable<T extends Record<string, any>>({
 
   const getActionVariantClass = (variant?: RowAction<T>["variant"]) => {
     switch (variant) {
-      case "danger":  return "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300";
-      case "warning": return "text-amber-600 hover:text-amber-700 dark:text-amber-400";
-      case "success": return "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400";
-      default:        return "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300";
+      case "danger":
+        return "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300";
+      case "warning":
+        return "text-amber-600 hover:text-amber-700 dark:text-amber-400";
+      case "success":
+        return "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400";
+      default:
+        return "text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300";
     }
   };
 
@@ -98,17 +101,19 @@ export default function DataTable<T extends Record<string, any>>({
     : columns;
 
   return (
-    <div className={`w-full overflow-hidden ${className}`}>
+    <div
+      className={`w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-xs overflow-hidden ${className}`}
+    >
       {/* ─── Desktop Table View (>= md) ────────────────── */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
+            <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800">
               {allColumns.map((col) => (
                 <th
                   key={col.key}
                   style={{ width: col.width }}
-                  className={`px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${getAlignClass(
+                  className={`px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${getAlignClass(
                     col.align
                   )}`}
                 >
@@ -120,13 +125,13 @@ export default function DataTable<T extends Record<string, any>>({
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
             {data.map((row, idx) => (
               <tr
-                key={getKey(row)}
+                key={getKey(row, idx)}
                 className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 py-3.5 text-slate-700 dark:text-slate-200 align-middle ${getAlignClass(
+                    className={`px-5 py-4 text-slate-700 dark:text-slate-200 align-middle ${getAlignClass(
                       col.align
                     )}`}
                   >
@@ -136,7 +141,7 @@ export default function DataTable<T extends Record<string, any>>({
                   </td>
                 ))}
                 {hasActions && (
-                  <td className="px-4 py-3.5 text-right align-middle">
+                  <td className="px-5 py-4 text-right align-middle">
                     <div className="flex items-center justify-end gap-3">
                       {rowActions.map((action, aIdx) => {
                         const lbl = resolveLabel(action, row);
@@ -145,7 +150,9 @@ export default function DataTable<T extends Record<string, any>>({
                           <button
                             key={aIdx}
                             onClick={() => action.onClick(row)}
-                            className={`text-xs font-medium transition-colors ${getActionVariantClass(action.variant)}`}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${getActionVariantClass(
+                              action.variant
+                            )}`}
                           >
                             {lbl}
                           </button>
@@ -161,29 +168,29 @@ export default function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* ─── Mobile Card View (< md) ────────────────────── */}
-      <div className="md:hidden space-y-3 p-3">
+      <div className="md:hidden space-y-3 p-4">
         {data.map((row, idx) => {
           if (renderMobileCard) {
             return (
-              <div key={getKey(row)}>{renderMobileCard(row, idx)}</div>
+              <div key={getKey(row, idx)}>{renderMobileCard(row, idx)}</div>
             );
           }
 
           // Fallback auto card
           return (
             <div
-              key={getKey(row)}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-2"
+              key={getKey(row, idx)}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs space-y-2.5"
             >
               {columns.map((col) => (
                 <div
                   key={col.key}
-                  className="flex items-center justify-between text-xs gap-2"
+                  className="flex items-center justify-between text-xs gap-3"
                 >
-                  <span className="font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-400 dark:text-slate-500">
                     {getColLabel(col)}
                   </span>
-                  <div className="text-slate-800 dark:text-slate-100 text-right">
+                  <div className="text-slate-800 dark:text-slate-100 font-medium text-right">
                     {col.render
                       ? col.render(row, idx)
                       : (row[col.key] as React.ReactNode) ?? "-"}
@@ -191,7 +198,7 @@ export default function DataTable<T extends Record<string, any>>({
                 </div>
               ))}
               {hasActions && (
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                   {rowActions.map((action, aIdx) => {
                     const lbl = resolveLabel(action, row);
                     if (!lbl || lbl === "-") return null;
@@ -199,7 +206,9 @@ export default function DataTable<T extends Record<string, any>>({
                       <button
                         key={aIdx}
                         onClick={() => action.onClick(row)}
-                        className={`text-xs font-medium transition-colors ${getActionVariantClass(action.variant)}`}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 transition-colors ${getActionVariantClass(
+                          action.variant
+                        )}`}
                       >
                         {lbl}
                       </button>

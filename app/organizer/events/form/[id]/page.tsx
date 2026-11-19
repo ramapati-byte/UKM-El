@@ -354,7 +354,7 @@ export default function AturFormPage() {
               required
               options={FIELD_TYPE_OPTIONS}
               value={formData.field_type}
-              onChange={e => setFormData({...formData, field_type: e.target.value})}
+              onChange={(val: string) => setFormData({...formData, field_type: val})}
             />
 
             {(formData.field_type === 'select' || formData.field_type === 'radio') && (

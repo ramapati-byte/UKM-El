@@ -1,0 +1,245 @@
+▲ Next.js 16.2.9 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+✓ Ready in 1615ms
+- Experiments (use with caution):
+  · optimizePackageImports
+
+○ Compiling / ...
+ GET / 200 in 18.9s (next.js: 18.3s, application-code: 559ms)
+○ Compiling /admin/ukm ...
+ GET /admin/ukm 200 in 2.3s (next.js: 1490ms, application-code: 765ms)
+ GET /mahasiswa/profil 200 in 5.8s (next.js: 5.0s, application-code: 765ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/admin/ukm" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="admin/ukm/...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function UkmListPage} serverProvidedParams={{...}}>
+            <UkmListPage params={Promise} searchParams={Promise}>
+              <AppShell title="Manajemen UKM" subtitle="Kelola dat..." role="superadmin">
+                <div className="app-wrappe...">
+                  <Sidebar>
+                  <div className="app-main f...">
+                    <Header user={{id:1,nim:"2024...", ...}} onToggleSidebar={function onToggleSidebar} ...>
+                      <header className="app-header">
+                        <div>
+                        <div className="flex items...">
+                          <button>
+                          <button>
+                          <div className="relative" ref={{current:null}}>
+                            <button type="button" onClick={function onClick} className="flex items..." ...>
+                              <div
+                                className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 da..."
+                              >
++                               A
+-                               P
+                              ...
+                    ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Header (components\shell\Header.tsx:133:15)
+    at AppShell (components\shell\AppShell.tsx:100:9)
+    at UkmListPage (app\admin\ukm\page.tsx:92:5)
+  131 |               aria-haspopup="true"
+  132 |             >
+> 133 |               <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 te...
+      |               ^
+  134 |                 {user.name ? user.name.charAt(0) : "U"}
+  135 |               </div>
+  136 |               <div className="hidden md:block text-left text-xs leading-none">
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerLayoutRouter url="/mahasiswa..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="mahasiswa/...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function ProfilPage} serverProvidedParams={{...}}>
+          <ProfilPage params={Promise} searchParams={Promise}>
+            <MahasiswaLayout>
+              <AppShell role="mahasiswa" navSections={[...]} title="Profil Saya" subtitle="Sistem Inf...">
+                <div className="app-wrappe...">
+                  <Sidebar>
+                  <div className="app-main f...">
+                    <Header user={{id:1,nim:"2024...", ...}} onToggleSidebar={function onToggleSidebar} ...>
+                      <header className="app-header">
+                        <div>
+                        <div className="flex items...">
+                          <button>
+                          <button>
+                          <div className="relative" ref={{current:null}}>
+                            <button type="button" onClick={function onClick} className="flex items..." ...>
+                              <div
+                                className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 da..."
+                              >
++                               A
+-                               P
+                              ...
+                    ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Header (components\shell\Header.tsx:133:15)
+    at AppShell (components\shell\AppShell.tsx:100:9)
+    at MahasiswaLayout (components\MahasiswaLayout.tsx:95:5)
+    at ProfilPage (app\mahasiswa\profil\page.tsx:140:7)
+  131 |               aria-haspopup="true"
+  132 |             >
+> 133 |               <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 te...
+      |               ^
+  134 |                 {user.name ? user.name.charAt(0) : "U"}
+  135 |               </div>
+  136 |               <div className="hidden md:block text-left text-xs leading-none">
+○ Compiling /events/[id] ...
+ GET /events 200 in 4.7s (next.js: 4.6s, application-code: 60ms)
+ GET /events/3 200 in 5.6s (next.js: 5.5s, application-code: 138ms)
+ GET /events/2 200 in 5.6s (next.js: 5.5s, application-code: 141ms)
+ GET /events/1 200 in 5.6s (next.js: 5.5s, application-code: 156ms)
+ GET /admin/roles 200 in 1862ms (next.js: 1747ms, application-code: 115ms)
+ GET /admin/audit 200 in 1853ms (next.js: 1757ms, application-code: 96ms)
+○ Compiling /admin/events ...
+ GET /admin/events 200 in 3.9s (next.js: 3.8s, application-code: 99ms)
+ GET /admin/dashboard 200 in 1911ms (next.js: 1803ms, application-code: 109ms)
+ GET /admin/ukm 200 in 112ms (next.js: 29ms, application-code: 82ms)
+ GET /admin/ukm/ukm-003 200 in 4.6s (next.js: 4.2s, application-code: 385ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/admin/ukm..." tree={[...]} params={{id:"ukm-003"}} cacheNode={{rsc:{...}, ...}} ...>
+        <SegmentViewNode type="page" pagePath="admin/ukm/...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function UkmDetailPage} serverProvidedParams={{...}}>
+            <UkmDetailPage params={Promise} searchParams={Promise}>
+              <AppShell title="Detail UKM">
+                <div className="app-wrappe...">
+                  <Sidebar>
+                  <div className="app-main f...">
+                    <Header user={{id:1,nim:"2024...", ...}} onToggleSidebar={function onToggleSidebar} ...>
+                      <header className="app-header">
+                        <div>
+                        <div className="flex items...">
+                          <button>
+                          <button>
+                          <div className="relative" ref={{current:null}}>
+                            <button type="button" onClick={function onClick} className="flex items..." ...>
+                              <div
+                                className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 da..."
+                              >
++                               A
+-                               P
+                              ...
+                    ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Header (components\shell\Header.tsx:133:15)
+    at AppShell (components\shell\AppShell.tsx:100:9)
+    at UkmDetailPage (app\admin\ukm\[id]\page.tsx:51:7)
+  131 |               aria-haspopup="true"
+  132 |             >
+> 133 |               <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 te...
+      |               ^
+  134 |                 {user.name ? user.name.charAt(0) : "U"}
+  135 |               </div>
+  136 |               <div className="hidden md:block text-left text-xs leading-none">
+ GET /mahasiswa/profil 200 in 979ms (next.js: 132ms, application-code: 846ms)
+ GET /images/ukm/basket-logo.png 404 in 3.5s (next.js: 3.3s, application-code: 273ms)
+ GET /admin/ukm/ukm-003 200 in 317ms (next.js: 46ms, application-code: 271ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/admin/ukm..." tree={[...]} params={{id:"ukm-003"}} cacheNode={{rsc:{...}, ...}} ...>
+        <SegmentViewNode type="page" pagePath="admin/ukm/...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function UkmDetailPage} serverProvidedParams={{...}}>
+            <UkmDetailPage params={Promise} searchParams={Promise}>
+              <AppShell title="Detail UKM">
+                <div className="app-wrappe...">
+                  <Sidebar>
+                  <div className="app-main f...">
+                    <Header user={{id:1,nim:"2024...", ...}} onToggleSidebar={function onToggleSidebar} ...>
+                      <header className="app-header">
+                        <div>
+                        <div className="flex items...">
+                          <button>
+                          <button>
+                          <div className="relative" ref={{current:null}}>
+                            <button type="button" onClick={function onClick} className="flex items..." ...>
+                              <div
+                                className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 da..."
+                              >
++                               A
+-                               P
+                              ...
+                    ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Header (components\shell\Header.tsx:133:15)
+    at AppShell (components\shell\AppShell.tsx:100:9)
+    at UkmDetailPage (app\admin\ukm\[id]\page.tsx:51:7)
+  131 |               aria-haspopup="true"
+  132 |             >
+> 133 |               <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/70 te...
+      |               ^
+  134 |                 {user.name ? user.name.charAt(0) : "U"}
+  135 |               </div>
+  136 |               <div className="hidden md:block text-left text-xs leading-none">
+ GET /images/ukm/basket-logo.png 404 in 86ms (next.js: 9ms, application-code: 77ms)
+ GET /admin/roles 200 in 1510ms (next.js: 1441ms, application-code: 69ms)

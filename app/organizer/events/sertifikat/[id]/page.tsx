@@ -442,7 +442,7 @@ export default function SertifikatSettingPage() {
                       <Select
                         label="Tipe Teks Kustom"
                         value={formData.sertifikat_custom_type}
-                        onChange={e => setFormData({...formData, sertifikat_custom_type: e.target.value})}
+                        onChange={(val: string) => setFormData({...formData, sertifikat_custom_type: val})}
                         options={[
                           { value: "none", label: "Tidak Ada" },
                           { value: "global", label: "Sama Untuk Semua Peserta" },

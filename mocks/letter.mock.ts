@@ -55,7 +55,7 @@ export const MOCK_LETTERS: LetterEntity[] = [
     id: "ltr-002",
     nomorSurat: "SPPR/2026/11/002",
     jenis: "surat_masuk",
-    status: "diajujkan",
+    status: "diajukan",
     prioritas: "tinggi",
     perihal: "Permohonan Pinjaman Ruang Seminar",
     tujuan: "Bagian Tata Ruang",

@@ -2,12 +2,12 @@
 
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
-import { getPermissions } from "@/lib/permissions";
+import { getPermissions, type UserRole, type Permission } from "@/lib/permissions";
 import Badge from "@/components/ui/Badge";
 
 export default function RolesPage() {
-  const roles = ["superadmin", "penyelenggara", "mahasiswa"];
-  const permissions = [
+  const roles: UserRole[] = ["superadmin", "penyelenggara", "mahasiswa"];
+  const permissions: Permission[] = [
     "event.view", "event.create", "event.edit", "event.delete",
     "ukm.view", "ukm.create", "ukm.edit", "ukm.verify",
     "letter.view", "letter.create", "letter.edit",
@@ -24,7 +24,7 @@ export default function RolesPage() {
     role,
     permissions: permissions.map(p => ({
       key: p,
-      allowed: getPermissions(role as any).includes(p as any),
+      allowed: getPermissions(role).includes(p),
     })),
   }));
 

@@ -96,6 +96,54 @@ export default function MahasiswaDashboard() {
           </div>
         )}
 
+        {/* Akses Cepat Keanggotaan & Komunitas UKM */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/mahasiswa/kartu-anggota"
+            className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+              <i className="bi bi-credit-card-2-front" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Kartu Anggota Digital
+              </h3>
+              <p className="text-xs text-slate-500">QR Code identitas keanggotaan</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/ukm"
+            className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+              <i className="bi bi-building" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Direktori UKM
+              </h3>
+              <p className="text-xs text-slate-500">Jelajahi organisasi mahasiswa</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/berita"
+            className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+              <i className="bi bi-megaphone" aria-hidden="true" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                Warta & Pengumuman
+              </h3>
+              <p className="text-xs text-slate-500">Informasi resmi seputar kampus</p>
+            </div>
+          </Link>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle icon="bi-ticket-perforated">Event Saya</CardTitle>

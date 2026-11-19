@@ -272,7 +272,7 @@ export default function ProfilPage() {
                     <Select
                       label="Jenis Kelamin"
                       value={form.jenis_kelamin}
-                      onChange={(e) => setForm({ ...form, jenis_kelamin: e.target.value })}
+                      onChange={(val: string) => setForm({ ...form, jenis_kelamin: val })}
                       options={[
                         { value: "", label: "- Pilih -" },
                         { value: "Laki-laki", label: "Laki-laki" },

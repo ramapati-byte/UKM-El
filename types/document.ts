@@ -7,7 +7,7 @@ export type DocumentType = "surat" | "laporan" | "proker" | "keuangan" | "kepeng
 export interface DocumentFolder {
   id: string;
   nama: string;
-  parentId?: string;
+  parentId?: string | null;
   ukmId: string;
   createdAt: string;
 }
@@ -19,11 +19,11 @@ export interface DocumentEntity {
   fileUrl: string;
   ukuranFile: number;
   versi: number;
-  folderId?: string;
+  folderId?: string | null;
   ukmId: string;
   diunggahOleh: string;
   diunggahPada: string;
-  deskripsi?: string;
+  deskripsi?: string | null;
 }
 
 export interface DocumentQuery extends BaseQuery {

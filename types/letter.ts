@@ -3,7 +3,7 @@
 import type { BaseQuery } from "./common";
 
 export type LetterType = "surat_masuk" | "surat_keluar";
-export type LetterStatus = "draft" | "diajujkan" | "disetujui" | "ditolak" | "diarcis";
+export type LetterStatus = "draft" | "diajukan" | "disetujui" | "ditolak" | "diarsip";
 export type LetterPriority = "rendah" | "normal" | "tinggi" | "urgent";
 
 export interface LetterTemplate {
@@ -21,11 +21,11 @@ export interface LetterEntity {
   status: LetterStatus;
   prioritas: LetterPriority;
   perihal: string;
-  tujuan?: string;
-  pengirim?: string;
+  tujuan?: string | null;
+  pengirim?: string | null;
   tanggalSurat: string;
-  tanggalTerima?: string;
-  fileUrl?: string;
+  tanggalTerima?: string | null;
+  fileUrl?: string | null;
   ukmId: string;
   createdBy: string;
   createdAt: string;

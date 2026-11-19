@@ -234,7 +234,7 @@ export default function CertificateCommitteeSection({
           <Select
             label="Orientasi Dokumen"
             value={orientation}
-            onChange={(e) => setOrientation(e.target.value as "landscape" | "portrait")}
+            onChange={(val: string) => setOrientation(val as "landscape" | "portrait")}
             options={[
               { value: "landscape", label: "Landscape (Horizontal)" },
               { value: "portrait", label: "Portrait (Vertikal)" },

@@ -1,5 +1,4 @@
-// components/ui/Modal.tsx — Modal dialog kanonik AdminLTE 4
-// Responsif: full-screen di mobile, dialog berpusat di desktop
+// components/ui/Modal.tsx — Modern Clean Modal Dialog
 
 "use client";
 
@@ -35,7 +34,6 @@ export default function Modal({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleEsc);
-    // Prevent body scroll when modal is open
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handleEsc);
@@ -54,39 +52,39 @@ export default function Modal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal Dialog */}
+      {/* Modal Dialog Box */}
       <div
-        className={`relative w-full h-full sm:h-auto ${SIZE_MAP[size]} bg-white dark:bg-slate-900 sm:rounded-2xl shadow-2xl flex flex-col max-h-[100vh] sm:max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-800 z-10 animate-in fade-in zoom-in-95 duration-200`}
+        className={`relative w-full h-full sm:h-auto ${SIZE_MAP[size]} bg-white dark:bg-slate-900 sm:rounded-3xl shadow-2xl flex flex-col max-h-[100vh] sm:max-h-[90vh] overflow-hidden border border-slate-200/80 dark:border-slate-800 z-10 animate-in fade-in zoom-in-95 duration-200`}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
           <h2
             id="modal-title"
-            className="text-base font-bold text-slate-900 dark:text-slate-100 m-0"
+            className="text-base font-bold text-slate-900 dark:text-slate-100 m-0 tracking-tight"
           >
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             aria-label="Tutup dialog"
           >
-            <i className="bi bi-x-lg text-base" aria-hidden="true" />
+            <i className="bi bi-x-lg text-sm" aria-hidden="true" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 shrink-0">
+          <div className="px-6 py-4 bg-slate-50/70 dark:bg-slate-850/70 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
             {footer}
           </div>
         )}

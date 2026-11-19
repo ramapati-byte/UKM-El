@@ -19,8 +19,9 @@ const tomorrow = "2026-11-10T08:30:00";
 // Helper untuk filter data berdasarkan UKM dari header request
 const getUkFromConfig = (config: AxiosRequestConfig): string | null => {
   try {
+    if (!config.headers) return null;
     const ukHeader = config.headers["x-ukm-id"] || config.headers["X-UKM-ID"];
-    return ukHeader || null;
+    return (ukHeader as string) || null;
   } catch {
     return null;
   }
