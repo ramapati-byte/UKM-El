@@ -1,10 +1,11 @@
-// components/ui/Button.tsx — Modern Interactive Action Button
+// components/ui/Button.tsx — Modern Tactile Action Button
 
 import React from "react";
 
 export type ButtonVariant =
   | "primary"
   | "secondary"
+  | "sunrise"
   | "success"
   | "danger"
   | "warning"
@@ -26,6 +27,8 @@ export interface ButtonProps
 const VARIANT_MAP: Record<ButtonVariant, string> = {
   primary:
     "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-xs shadow-indigo-600/20 focus:ring-indigo-500/30",
+  sunrise:
+    "bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-600 hover:via-rose-600 hover:to-indigo-700 text-white shadow-md shadow-rose-500/25 focus:ring-rose-500/30 font-bold",
   secondary:
     "bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white shadow-xs focus:ring-slate-500/30",
   success:
@@ -36,15 +39,15 @@ const VARIANT_MAP: Record<ButtonVariant, string> = {
     "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-bold shadow-xs shadow-amber-500/20 focus:ring-amber-500/30",
   info: "bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white shadow-xs shadow-sky-600/20 focus:ring-sky-500/30",
   outline:
-    "border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-slate-400/20 shadow-2xs",
+    "border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-slate-400/20 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600",
   ghost:
     "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 focus:ring-slate-400/20",
 };
 
 const SIZE_MAP: Record<ButtonSize, string> = {
-  sm: "text-xs px-3 py-1.5 gap-1.5 rounded-lg",
-  md: "text-sm px-4 py-2.5 gap-2 rounded-xl",
-  lg: "text-base px-6 py-3 gap-2.5 rounded-xl",
+  sm: "text-xs px-3 py-1.5 gap-1.5 rounded-xl",
+  md: "text-sm px-4.5 py-2.5 gap-2 rounded-xl",
+  lg: "text-base px-6 py-3 gap-2.5 rounded-2xl",
 };
 
 export default function Button({
@@ -65,7 +68,7 @@ export default function Button({
     <button
       type={type}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center font-semibold transition-all duration-150 focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed select-none active:scale-[0.98] ${VARIANT_MAP[variant]} ${SIZE_MAP[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold transition-all duration-150 focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed select-none active:scale-[0.97] cursor-pointer ${VARIANT_MAP[variant]} ${SIZE_MAP[size]} ${className}`}
       {...props}
     >
       {loading && (

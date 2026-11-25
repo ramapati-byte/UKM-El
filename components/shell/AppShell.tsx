@@ -1,4 +1,4 @@
-// components/shell/AppShell.tsx — Master Application Shell (Bespoke Modern SaaS)
+// components/shell/AppShell.tsx — Master Application Shell with Sunrise Mesh & Tactile Energy
 
 "use client";
 
@@ -10,6 +10,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import LegacyBanner from "../migration/LegacyBanner";
 import { getNavByRole, type NavSection } from "../../lib/navigation";
+import { OrgProvider } from "../org/OrgContext";
 
 export interface BreadcrumbItem {
   label: string;
@@ -84,9 +85,10 @@ export default function AppShell({
   const mobileBottomItems = sections.flatMap((s) => s.items).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <OrgProvider>
+    <div className="min-h-screen bg-sunrise-mesh text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* Shell Container */}
-      <div className="flex-1 flex flex-row min-h-screen relative overflow-x-hidden">
+      <div className="flex-1 flex flex-row relative overflow-x-hidden">
         {/* Sidebar Component */}
         <Sidebar
           sections={sections}
@@ -99,8 +101,8 @@ export default function AppShell({
           user={user}
         />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Main Content Area — margin-left kompensasi sidebar fixed di desktop */}
+        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${collapsed ? "lg:ml-20" : "lg:ml-68"}`}>
           {/* Header */}
           <Header
             user={user}
@@ -120,28 +122,28 @@ export default function AppShell({
               <div>
                 {/* Breadcrumbs */}
                 {breadcrumbs && breadcrumbs.length > 0 && (
-                  <nav aria-label="Breadcrumb" className="mb-1.5">
-                    <ol className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 p-0 m-0 list-none">
+                  <nav aria-label="Breadcrumb" className="mb-2">
+                    <ol className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 p-0 m-0 list-none">
                       <li>
                         <Link
                           href="/"
-                          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                          className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                         >
                           <i className="bi bi-house-door" aria-hidden="true" />
                         </Link>
                       </li>
                       {breadcrumbs.map((b, idx) => (
-                        <li key={idx} className="flex items-center gap-1.5">
+                        <li key={idx} className="flex items-center gap-2">
                           <span className="text-slate-300 dark:text-slate-600">/</span>
                           {b.href ? (
                             <Link
                               href={b.href}
-                              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                              className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors font-medium"
                             >
                               {b.label}
                             </Link>
                           ) : (
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
                               {b.label}
                             </span>
                           )}
@@ -153,13 +155,13 @@ export default function AppShell({
               </div>
 
               {actions && (
-                <div className="flex items-center gap-2 shrink-0">{actions}</div>
+                <div className="flex items-center gap-2.5 shrink-0">{actions}</div>
               )}
             </div>
           )}
 
-          {/* Main Body */}
-          <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-8 w-full max-w-7xl mx-auto">
+          {/* Main Body with smooth Entrance */}
+          <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 pb-24 md:pb-8 w-full max-w-7xl mx-auto animate-fade-in-up">
             {children}
           </main>
 
@@ -168,8 +170,8 @@ export default function AppShell({
         </div>
       </div>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR (mirip fitur favorit di desain lama) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 z-40 flex justify-around items-center h-16 px-1 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+      {/* MOBILE BOTTOM NAVIGATION BAR (Dengan Aksen RedSun Glow) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 z-40 flex justify-around items-center h-16 px-1 shadow-[0_-4px_20px_rgba(244,63,94,0.06)]">
         {mobileBottomItems.map((item, index) => {
           const isActive =
             pathname === item.href ||
@@ -182,15 +184,15 @@ export default function AppShell({
             <Link
               key={index}
               href={item.href}
-              className={`flex flex-1 flex-col items-center justify-center h-full space-y-1 relative transition-colors ${
+              className={`flex flex-1 flex-col items-center justify-center h-full space-y-1 relative transition-all duration-150 active:scale-95 ${
                 isActive
-                  ? "text-indigo-600 dark:text-indigo-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  ? "text-rose-600 dark:text-rose-400 font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
-              {/* Active top indicator pill */}
+              {/* Active top glowing indicator bar */}
               {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-b-full shadow-xs" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 rounded-b-full shadow-xs" />
               )}
               <div className="shrink-0 flex items-center justify-center">
                 <i className={`bi ${item.icon} text-lg leading-none`} />
@@ -207,7 +209,7 @@ export default function AppShell({
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="flex flex-1 flex-col items-center justify-center h-full space-y-1 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            className="flex flex-1 flex-col items-center justify-center h-full space-y-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-95 transition-colors"
           >
             <i className="bi bi-grid text-lg leading-none" />
             <span className="text-[10px] font-semibold tracking-tight text-center leading-none">
@@ -217,5 +219,6 @@ export default function AppShell({
         )}
       </nav>
     </div>
+    </OrgProvider>
   );
 }

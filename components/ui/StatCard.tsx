@@ -1,13 +1,13 @@
-// components/ui/StatCard.tsx — Modern KPI / Metric Widget
+// components/ui/StatCard.tsx — Vibrant Metric Widget with Sunrise Light Glow
 
 import React from "react";
-import type { BadgeVariant } from "../../types/common";
+import type { ExtendedBadgeVariant } from "./Badge";
 
 export interface StatCardProps {
   title: string;
   value: string | number;
   icon: string; // class Bootstrap Icons, e.g. "bi-calendar-event"
-  variant?: BadgeVariant;
+  variant?: ExtendedBadgeVariant;
   subtitle?: string;
   trend?: {
     value: string;
@@ -18,13 +18,18 @@ export interface StatCardProps {
 }
 
 const VARIANT_ACCENT: Record<
-  BadgeVariant,
+  ExtendedBadgeVariant,
   { iconBg: string; text: string; glow: string }
 > = {
   primary: {
     iconBg: "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/60",
     text: "text-indigo-600 dark:text-indigo-400",
     glow: "group-hover:border-indigo-300 dark:group-hover:border-indigo-600",
+  },
+  sunrise: {
+    iconBg: "bg-gradient-to-tr from-amber-500/15 via-rose-500/20 to-indigo-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/60",
+    text: "text-rose-600 dark:text-rose-400",
+    glow: "group-hover:border-rose-300 dark:group-hover:border-rose-600",
   },
   success: {
     iconBg: "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/60",
@@ -42,9 +47,9 @@ const VARIANT_ACCENT: Record<
     glow: "group-hover:border-amber-300 dark:group-hover:border-amber-600",
   },
   danger: {
-    iconBg: "bg-red-50 dark:bg-red-950/70 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/60",
-    text: "text-red-600 dark:text-red-400",
-    glow: "group-hover:border-red-300 dark:group-hover:border-red-600",
+    iconBg: "bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/60",
+    text: "text-rose-600 dark:text-rose-400",
+    glow: "group-hover:border-rose-300 dark:group-hover:border-rose-600",
   },
   secondary: {
     iconBg: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
@@ -63,12 +68,12 @@ export default function StatCard({
   onClick,
   className = "",
 }: StatCardProps) {
-  const accent = VARIANT_ACCENT[variant];
+  const accent = VARIANT_ACCENT[variant] || VARIANT_ACCENT.primary;
 
   return (
     <div
       onClick={onClick}
-      className={`group relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between ${
+      className={`group relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-xs card-hover-sunrise flex flex-col justify-between ${
         accent.glow
       } ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
@@ -83,20 +88,20 @@ export default function StatCard({
         </div>
 
         <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl shadow-xs transition-transform duration-200 group-hover:scale-105 ${accent.iconBg}`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl shadow-xs transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3 ${accent.iconBg}`}
         >
           <i className={`bi ${icon}`} aria-hidden="true" />
         </div>
       </div>
 
       {(subtitle || trend) && (
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+        <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
           {trend && (
             <span
-              className={`font-semibold inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+              className={`font-semibold inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full ${
                 trend.isUp
                   ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400"
-                  : "bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400"
+                  : "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400"
               }`}
             >
               <i
@@ -107,7 +112,7 @@ export default function StatCard({
             </span>
           )}
           {subtitle && (
-            <span className="text-slate-500 dark:text-slate-400 truncate">
+            <span className="text-slate-500 dark:text-slate-400 truncate font-medium">
               {subtitle}
             </span>
           )}

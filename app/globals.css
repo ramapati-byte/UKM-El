@@ -4,6 +4,9 @@
 @source "../app";
 @source "../components";
 
+/* Safelist dynamic classes used in AppShell for sidebar offset */
+@source inline("lg:ml-20 lg:ml-68");
+
 /* Varian dark mode modern (mendukung class .dark dan atribut data-theme) */
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *, [data-bs-theme="dark"], [data-bs-theme="dark"] *));
 
@@ -17,6 +20,11 @@
   --brand-500: #6366f1;
   --brand-600: #4f46e5;
   --brand-700: #4338ca;
+
+  /* Sunrise & RedSun Palette */
+  --sunrise-coral: #ff5c5c;
+  --sunrise-amber: #f59e0b;
+  --sunrise-rose: #f43f5e;
 }
 
 .dark, [data-theme="dark"], [data-bs-theme="dark"] {
@@ -41,30 +49,90 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Custom UI Utility Classes ───────────────────────── */
+/* ─── Sunrise Lightmode & Tactile UI Utility Classes ───────────────────────── */
 @layer utilities {
+  /* Ambient Background Meshes */
+  .bg-sunrise-mesh {
+    background: 
+      radial-gradient(at 0% 0%, rgba(254, 243, 199, 0.45) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(254, 205, 211, 0.4) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(238, 242, 255, 0.7) 0px, transparent 50%);
+  }
+
+  .dark .bg-sunrise-mesh,
+  [data-theme="dark"] .bg-sunrise-mesh {
+    background:
+      radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(76, 29, 149, 0.3) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(15, 23, 42, 0.8) 0px, transparent 50%);
+  }
+
+  /* Full Screen Sunrise Hero Background */
+  .bg-sunrise-full-hero {
+    background: 
+      radial-gradient(circle at 85% 15%, rgba(254, 215, 170, 0.45) 0%, transparent 40%),
+      radial-gradient(circle at 15% 25%, rgba(254, 205, 211, 0.35) 0%, transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(224, 231, 255, 0.45) 0%, transparent 50%),
+      linear-gradient(180deg, #ffffff 0%, #fffbf5 35%, #fff7ed 70%, #f8fafc 100%);
+  }
+
+  .dark .bg-sunrise-full-hero,
+  [data-theme="dark"] .bg-sunrise-full-hero {
+    background: 
+      radial-gradient(circle at 85% 15%, rgba(120, 53, 15, 0.25) 0%, transparent 40%),
+      radial-gradient(circle at 15% 25%, rgba(159, 18, 57, 0.2) 0%, transparent 45%),
+      linear-gradient(180deg, #090d16 0%, #0f172a 40%, #111827 75%, #090d16 100%);
+  }
+
+  /* Performance: Lazy off-screen content rendering */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 400px;
+  }
+
+  /* Frosted Glassmorphism */
   .glass-header {
     background-color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 
   .dark .glass-header,
-  [data-theme="dark"] .glass-header,
-  [data-bs-theme="dark"] .glass-header {
+  [data-theme="dark"] .glass-header {
     background-color: rgba(15, 23, 42, 0.85);
   }
 
   .glass-card {
-    background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .dark .glass-card,
-  [data-theme="dark"] .glass-card,
-  [data-bs-theme="dark"] .glass-card {
-    background-color: rgba(17, 24, 39, 0.85);
+  [data-theme="dark"] .glass-card {
+    background-color: rgba(17, 24, 39, 0.88);
+  }
+
+  /* Tactile Hover Lift (The "Sunrise" Card Elevation) */
+  .card-hover-sunrise {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-hover-sunrise:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+      0 14px 28px -10px rgba(79, 70, 229, 0.12),
+      0 6px 14px -4px rgba(244, 63, 94, 0.08);
+  }
+
+  .dark .card-hover-sunrise:hover {
+    box-shadow: 
+      0 14px 28px -10px rgba(0, 0, 0, 0.5),
+      0 0 16px rgba(99, 102, 241, 0.15);
+  }
+
+  /* Sunrise Glowing Accent Rings */
+  .glow-sunrise {
+    box-shadow: 0 0 20px -3px rgba(244, 63, 94, 0.35);
   }
 
   /* Custom Clean Scrollbar */
@@ -77,8 +145,8 @@ body {
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
@@ -92,11 +160,11 @@ body {
     background: #334155;
   }
 
-  /* Smooth Subtle Animations */
+  /* Keyframe Animations */
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(14px);
     }
     to {
       opacity: 1;
@@ -104,7 +172,35 @@ body {
     }
   }
 
+  @keyframes floatSlow {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes sunrisePulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
   .animate-fade-in-up {
-    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-float-slow {
+    animation: floatSlow 4s ease-in-out infinite;
+  }
+
+  .animate-sunrise-pulse {
+    animation: sunrisePulse 2.5s ease-in-out infinite;
   }
 }

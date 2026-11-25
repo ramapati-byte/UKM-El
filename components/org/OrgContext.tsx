@@ -52,10 +52,17 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     setUkmData(null);
   };
 
-  if (!loaded) return null;
-
+  // Render context dengan nilai null saat SSR (sebelum hydration),
+  // agar children tidak crash walau loaded = false
   return (
-    <OrgContext.Provider value={{ ukmId, ukmSlug, ukmData, setUk, clearUk, isMultiTenant: true }}>
+    <OrgContext.Provider value={{
+      ukmId: loaded ? ukmId : null,
+      ukmSlug: loaded ? ukmSlug : null,
+      ukmData: loaded ? ukmData : null,
+      setUk,
+      clearUk,
+      isMultiTenant: true,
+    }}>
       {children}
     </OrgContext.Provider>
   );
