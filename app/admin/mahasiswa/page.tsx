@@ -583,14 +583,14 @@ export default function ManageMahasiswaPage() {
               label="Jenis Kelamin"
               name="jenis_kelamin"
               value={formData.jenis_kelamin}
-              onChange={handleInputChange}
+              onChange={(val: string) => setFormData((prev) => ({ ...prev, jenis_kelamin: val }))}
               options={GENDER_OPTIONS}
             />
             <Select
               label="Status Akun"
               name="status"
               value={formData.status}
-              onChange={handleInputChange}
+              onChange={(val: string) => setFormData((prev) => ({ ...prev, status: val }))}
               options={STATUS_OPTIONS}
             />
           </div>

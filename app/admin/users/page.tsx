@@ -566,7 +566,7 @@ export default function ManageUsersPage() {
               name="role"
               required
               value={formData.role}
-              onChange={handleInputChange}
+              onChange={(val: string) => setFormData((prev) => ({ ...prev, role: val }))}
               options={ROLE_OPTIONS}
             />
             <Input
@@ -589,14 +589,14 @@ export default function ManageUsersPage() {
               label="Jenis Kelamin"
               name="jenis_kelamin"
               value={formData.jenis_kelamin}
-              onChange={handleInputChange}
+              onChange={(val: string) => setFormData((prev) => ({ ...prev, jenis_kelamin: val }))}
               options={GENDER_OPTIONS}
             />
             <Select
               label="Status Akun"
               name="status"
               value={formData.status}
-              onChange={handleInputChange}
+              onChange={(val: string) => setFormData((prev) => ({ ...prev, status: val }))}
               options={STATUS_OPTIONS}
             />
           </div>

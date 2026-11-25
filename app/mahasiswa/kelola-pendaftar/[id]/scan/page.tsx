@@ -20,6 +20,7 @@ export default function ScanCheckinMahasiswaPage() {
   const [eventData, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string; data?: any } | null>(null);
+  const [manualCode, setManualCode] = useState("");
 
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const isProcessing = useRef(false);
@@ -49,7 +50,7 @@ export default function ScanCheckinMahasiswaPage() {
     if (!loading) {
       scannerRef.current = new Html5QrcodeScanner(
         "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 }, supportedScanTypes: [0] },
+        { fps: 10, qrbox: { width: 250, height: 250 }, supportedScanTypes: [0, 1] },
         false
       );
 
@@ -146,8 +147,30 @@ export default function ScanCheckinMahasiswaPage() {
 
             <div
               id="reader"
-              className="w-full bg-slate-900 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-700"
+              className="w-full min-h-[260px] bg-white dark:bg-slate-800/40 text-slate-800 dark:text-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-700 p-2"
             />
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (manualCode.trim()) {
+                  onScanSuccess(manualCode.trim());
+                  setManualCode("");
+                }
+              }}
+              className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2"
+            >
+              <input
+                type="text"
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                placeholder="Atau masukkan kode tiket manual (cth: WS-2-XXXXXX)"
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+              <Button type="submit" size="sm" icon="bi-check2-circle">
+                Check-in
+              </Button>
+            </form>
 
             {scanResult && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm animate-in fade-in duration-200 rounded-xl">
