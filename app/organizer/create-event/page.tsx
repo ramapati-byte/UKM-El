@@ -419,7 +419,7 @@ export default function CreateEventPage() {
                   label="Jenis Event"
                   name="type"
                   value={eventData.type}
-                  onChange={handleEventChange}
+                  onChange={(val: string) => setEventData((prev) => ({ ...prev, type: val }))}
                   options={[
                     { value: "gratis", label: "Gratis" },
                     { value: "berbayar", label: "Berbayar" },
