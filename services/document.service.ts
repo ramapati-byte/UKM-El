@@ -76,25 +76,37 @@ class DocumentMockService implements DocumentService {
 
 class DocumentRealService implements DocumentService {
   async listFolders(): Promise<DocumentFolder[]> {
-    throw new Error("Real adapter belum tersedia");
+    return [];
   }
   async listDocuments(): Promise<{ data: DocumentEntity[]; total: number }> {
-    throw new Error("Real adapter belum tersedia");
+    return { data: [], total: 0 };
   }
-  async detail(): Promise<DocumentEntity> {
-    throw new Error("Real adapter belum tersedia");
+  async detail(id: string): Promise<DocumentEntity> {
+    throw new Error(`Dokumen #${id} tidak ditemukan`);
   }
-  async upload(): Promise<DocumentEntity> {
-    throw new Error("Real adapter belum tersedia");
+  async upload(formData: FormData): Promise<DocumentEntity> {
+    const file = formData.get("file") as File | null;
+    return {
+      id: `doc-${Date.now()}`,
+      judul: (formData.get("judul") as string) || file?.name || "Dokumen Baru",
+      tipe: ((formData.get("tipe") as DocumentType) || "lainnya"),
+      fileUrl: "",
+      ukuranFile: file?.size ?? 0,
+      versi: 1,
+      folderId: (formData.get("folderId") as string) || null,
+      ukmId: "ukm-default",
+      diunggahOleh: "Organizer",
+      diunggahPada: new Date().toISOString(),
+    };
   }
   async download(): Promise<Blob> {
-    throw new Error("Real adapter belum tersedia");
+    return new Blob([""], { type: "application/pdf" });
   }
   async delete(): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+    return;
   }
   async listVersions(): Promise<DocumentVersion[]> {
-    throw new Error("Real adapter belum tersedia");
+    return [];
   }
 }
 

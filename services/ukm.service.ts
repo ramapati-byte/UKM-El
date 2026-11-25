@@ -8,7 +8,10 @@ import type {
   UkmVerifyPayload,
   UkmStats,
   UkmService,
+  UkmCategory,
+  UkmStatus,
 } from "../types/ukm";
+import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_UKMS } from "../mocks/ukm.mock";
 
@@ -103,32 +106,151 @@ class UkmMockService implements UkmService {
   }
 }
 
-// ─── Real adapter (placeholder) ─────────────────────────
+// ─── Real adapter ────────────────────────────────────────
+
+interface BackendUkmRow {
+  id: number | string;
+  nama: string;
+  singkatan?: string | null;
+  slug: string;
+  deskripsi?: string | null;
+  kategori?: string | null;
+  logo?: string | null;
+  email_resmi?: string | null;
+  instagram?: string | null;
+  warna_tema?: string | null;
+  status?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+function mapUkmKategori(raw?: string | null): UkmCategory {
+  const val = (raw || "").toLowerCase();
+  if (val === "bem" || val === "himas" || val === "unit" || val === "km") {
+    return val;
+  }
+  return "unit";
+}
+
+function mapUkmStatus(raw?: string | null): UkmStatus {
+  if (raw === "aktif" || raw === "verified") return "verified";
+  if (raw === "pending") return "pending";
+  if (raw === "rejected") return "rejected";
+  return "inactive";
+}
+
+function mapBackendUkm(row: BackendUkmRow): UkmEntity {
+  return {
+    id: String(row.id),
+    ukmSlug: row.slug,
+    nama: row.nama,
+    singkatan: row.singkatan || undefined,
+    visi: row.deskripsi || undefined,
+    kategori: mapUkmKategori(row.kategori),
+    status: mapUkmStatus(row.status),
+    logoUrl: row.logo || undefined,
+    email: row.email_resmi || undefined,
+    mediaSosial: row.instagram ? { instagram: row.instagram } : undefined,
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
+  };
+}
 
 class UkmRealService implements UkmService {
-  async list(): Promise<{ data: UkmEntity[]; total: number }> {
-    throw new Error("Real adapter belum tersedia");
+  async list(params?: UkmQuery): Promise<{ data: UkmEntity[]; total: number }> {
+    const backendStatus =
+      params?.status && params.status !== "all"
+        ? params.status === "verified"
+          ? "aktif"
+          : params.status === "inactive"
+          ? "nonaktif"
+          : params.status
+        : "all";
+
+    const res = await api.get<{ data: BackendUkmRow[]; pagination?: { total?: number } }>("/ukm", {
+      params: {
+        search: params?.search || undefined,
+        kategori: params?.kategori && params.kategori !== "all" ? params.kategori : undefined,
+        status: backendStatus,
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 10,
+      },
+    });
+    const rows = res.data?.data ?? [];
+    return {
+      data: rows.map(mapBackendUkm),
+      total: res.data?.pagination?.total ?? rows.length,
+    };
   }
-  async detail(): Promise<UkmEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async detail(id: string): Promise<UkmEntity> {
+    const res = await api.get<BackendUkmRow>(`/ukm/${id}`);
+    return mapBackendUkm(res.data);
   }
-  async getBySlug(): Promise<UkmEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getBySlug(slug: string): Promise<UkmEntity> {
+    const res = await api.get<BackendUkmRow>(`/ukm/${slug}`);
+    return mapBackendUkm(res.data);
   }
-  async create(): Promise<UkmEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async create(payload: UkmCreatePayload): Promise<UkmEntity> {
+    const res = await api.post<{ id: number | string; slug: string }>("/ukm", {
+      nama: payload.nama,
+      singkatan: payload.singkatan || null,
+      slug: payload.ukmSlug,
+      deskripsi: payload.visi || payload.misi || null,
+      kategori: payload.kategori,
+      logo: payload.logoUrl || null,
+      email_resmi: payload.email || null,
+      instagram: payload.mediaSosial?.instagram || null,
+      status: "aktif",
+    });
+    return this.detail(String(res.data.id || res.data.slug || payload.ukmSlug));
   }
-  async update(): Promise<UkmEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async update(id: string, payload: Partial<UkmCreatePayload>): Promise<UkmEntity> {
+    const current = await this.detail(id);
+    await api.put(`/ukm/${id}`, {
+      nama: payload.nama ?? current.nama,
+      singkatan: payload.singkatan ?? current.singkatan ?? null,
+      deskripsi: payload.visi ?? current.visi ?? null,
+      kategori: payload.kategori ?? current.kategori,
+      logo: payload.logoUrl ?? current.logoUrl ?? null,
+      email_resmi: payload.email ?? current.email ?? null,
+      instagram: payload.mediaSosial?.instagram ?? current.mediaSosial?.instagram ?? null,
+      status: current.status === "verified" ? "aktif" : "nonaktif",
+    });
+    return this.detail(id);
   }
-  async verify(): Promise<UkmEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async verify(id: string, payload: UkmVerifyPayload): Promise<UkmEntity> {
+    const current = await this.detail(id);
+    await api.put(`/ukm/${id}`, {
+      nama: current.nama,
+      singkatan: current.singkatan ?? null,
+      deskripsi: current.visi ?? null,
+      kategori: current.kategori,
+      logo: current.logoUrl ?? null,
+      email_resmi: current.email ?? null,
+      instagram: current.mediaSosial?.instagram ?? null,
+      status: payload.status === "verified" ? "aktif" : "nonaktif",
+    });
+    return this.detail(id);
   }
-  async delete(): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/ukm/${id}`);
   }
+
   async stats(): Promise<UkmStats> {
-    throw new Error("Real adapter belum tersedia");
+    const { data } = await this.list({ status: "all", limit: 200 });
+    return {
+      total: data.length,
+      verified: data.filter((u) => u.status === "verified").length,
+      pending: data.filter((u) => u.status === "pending").length,
+      rejected: data.filter((u) => u.status === "rejected").length,
+      inactive: data.filter((u) => u.status === "inactive").length,
+    };
   }
 }
 

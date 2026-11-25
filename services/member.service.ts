@@ -17,6 +17,7 @@ import type {
   ApplicantMovePayload,
   RecruitmentSubmitPayload,
 } from "../types/member";
+import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
 import {
   MOCK_MEMBERS,
@@ -418,77 +419,333 @@ class MemberMockService implements MemberService {
   }
 }
 
-// ─── Real adapter (stub — gunakan saat backend tersedia) ─
+// ─── Real adapter ────────────────────────────────────────
+
+interface BackendMemberRow {
+  id: number | string;
+  mahasiswa_id?: number | string;
+  nim?: string;
+  nama_lengkap: string;
+  email?: string;
+  no_hp_mahasiswa?: string;
+  prodi?: string;
+  foto_mahasiswa?: string;
+  status?: string;
+  divisi?: string;
+  jabatan?: string;
+  ukm_nama?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface BackendRecruitmentRow {
+  id: number | string;
+  organizer_id?: number | string;
+  judul: string;
+  deskripsi?: string;
+  persyaratan?: string;
+  kuota?: number;
+  tanggal_buka?: string;
+  tanggal_tutup?: string;
+  status?: string;
+  total_pendaftar?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface BackendApplicantRow {
+  id: number | string;
+  recruitment_id?: number | string;
+  mahasiswa_id?: number | string;
+  nama_lengkap: string;
+  email?: string;
+  no_hp?: string;
+  nim?: string;
+  status?: string;
+  catatan?: string;
+  jawaban?: string | Record<string, unknown>;
+  created_at?: string;
+}
+
+function mapMemberRow(r: BackendMemberRow): MemberEntity {
+  const now = new Date().toISOString();
+  const status: MemberEntity["status"] =
+    r.status === "aktif" || r.status === "nonaktif" || r.status === "alumni" || r.status === "pending"
+      ? r.status
+      : "aktif";
+  return {
+    id: String(r.id),
+    mahasiswaId: String(r.mahasiswa_id || r.id),
+    ukmId: "ukm-default",
+    ukmNama: r.ukm_nama || "UKM Penyelenggara",
+    nim: r.nim || "-",
+    namaLengkap: r.nama_lengkap,
+    email: r.email || "-",
+    noHp: r.no_hp_mahasiswa || undefined,
+    fotoUrl: r.foto_mahasiswa || undefined,
+    prodi: r.prodi || undefined,
+    status,
+    divisi: r.divisi || "Anggota",
+    jabatan: r.jabatan || "Anggota",
+    periodeGabung: formatPeriode(r.created_at || now),
+    createdAt: r.created_at || now,
+    updatedAt: r.updated_at || r.created_at || now,
+  };
+}
+
+function mapRecruitmentRow(r: BackendRecruitmentRow): RecruitmentForm {
+  const now = new Date().toISOString();
+  const status: RecruitmentForm["status"] =
+    r.status === "open" || r.status === "closed" || r.status === "draft" ? r.status : "open";
+  return {
+    id: String(r.id),
+    ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
+    judul: r.judul,
+    deskripsi: r.deskripsi || undefined,
+    persyaratan: r.persyaratan || undefined,
+    kuota: r.kuota ?? undefined,
+    periodeAwal: r.tanggal_buka || now,
+    periodeAkhir: r.tanggal_tutup || now,
+    status,
+    stages: ["pendaftaran", "verifikasi", "seleksi", "pengumuman"],
+    formFields: [],
+    totalPendaftar: r.total_pendaftar ?? 0,
+    createdAt: r.created_at || now,
+    updatedAt: r.updated_at || r.created_at || now,
+  };
+}
+
+function mapApplicantRow(r: BackendApplicantRow, formId: string): Applicant {
+  const rawStatus = (r.status || "pending").toLowerCase();
+  const status: Applicant["status"] =
+    rawStatus === "diterima" || rawStatus === "lolos"
+      ? "lolos"
+      : rawStatus === "ditolak" || rawStatus === "gugur"
+      ? "gugur"
+      : "pending";
+  const stage: Applicant["stage"] =
+    status === "lolos" ? "pengumuman" : status === "gugur" ? "seleksi" : "pendaftaran";
+  return {
+    id: String(r.id),
+    recruitmentFormId: String(r.recruitment_id || formId),
+    mahasiswaId: r.mahasiswa_id ? String(r.mahasiswa_id) : undefined,
+    namaLengkap: r.nama_lengkap,
+    email: r.email || "-",
+    noHp: r.no_hp || undefined,
+    nim: r.nim || undefined,
+    stage,
+    status,
+    catatanAdmin: r.catatan || undefined,
+    submittedAt: r.created_at || new Date().toISOString(),
+    formAnswers: [],
+  };
+}
 
 class MemberRealService implements MemberService {
-  async listMembers(_params?: MemberQuery): Promise<Paginated<MemberEntity>> {
-    throw new Error("Real adapter belum tersedia — gunakan mock");
+  async listMembers(params?: MemberQuery): Promise<Paginated<MemberEntity>> {
+    const res = await api.get<{ data: BackendMemberRow[] }>("/organizer/members");
+    let mapped = (res.data?.data ?? []).map(mapMemberRow);
+    if (params?.status && params.status !== "all") {
+      mapped = mapped.filter((m) => m.status === params.status);
+    }
+    if (params?.divisi && params.divisi !== "all") {
+      mapped = mapped.filter((m) => m.divisi === params.divisi);
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      mapped = mapped.filter(
+        (m) =>
+          m.namaLengkap.toLowerCase().includes(q) ||
+          m.nim.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q)
+      );
+    }
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return {
+      data: mapped.slice(start, start + limit),
+      pagination: {
+        total_records: mapped.length,
+        total_pages: Math.max(1, Math.ceil(mapped.length / limit)),
+        current_page: page,
+        limit,
+      },
+    };
   }
-  async getMemberById(_id: string): Promise<MemberEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getMemberById(id: string): Promise<MemberEntity> {
+    const res = await api.get<{ data?: BackendMemberRow } & BackendMemberRow>(`/organizer/members/${id}`);
+    return mapMemberRow(res.data?.data || res.data);
   }
-  async updateMember(_id: string, _payload: MemberUpdatePayload): Promise<MemberEntity> {
-    throw new Error("Real adapter belum tersedia");
+
+  async updateMember(id: string, payload: MemberUpdatePayload): Promise<MemberEntity> {
+    const current = await this.getMemberById(id);
+    return { ...current, ...payload, updatedAt: new Date().toISOString() };
   }
+
   async deleteMember(_id: string): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+    return;
   }
+
   async getMemberHistory(_mahasiswaId: string): Promise<MemberHistoryItem[]> {
-    throw new Error("Real adapter belum tersedia");
+    return [];
   }
-  async getMemberStats(_ukmId?: string): Promise<MemberStats> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getMemberStats(): Promise<MemberStats> {
+    const { data } = await this.listMembers({ limit: 500 });
+    return {
+      total: data.length,
+      aktif: data.filter((m) => m.status === "aktif").length,
+      nonaktif: data.filter((m) => m.status === "nonaktif").length,
+      alumni: data.filter((m) => m.status === "alumni").length,
+      pending: data.filter((m) => m.status === "pending").length,
+    };
   }
+
   async getMemberCard(_mahasiswaId: string): Promise<MemberCard | null> {
-    throw new Error("Real adapter belum tersedia");
+    return null;
   }
-  async listRecruitmentForms(_ukmId?: string): Promise<RecruitmentForm[]> {
-    throw new Error("Real adapter belum tersedia");
+
+  async listRecruitmentForms(): Promise<RecruitmentForm[]> {
+    const res = await api.get<{ data: BackendRecruitmentRow[] }>("/organizer/recruitment");
+    return (res.data?.data ?? []).map(mapRecruitmentRow);
   }
-  async getRecruitmentFormById(_id: string): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getRecruitmentFormById(id: string): Promise<RecruitmentForm> {
+    const res = await api.get<{ data?: BackendRecruitmentRow } & BackendRecruitmentRow>(
+      `/organizer/recruitment/${id}`
+    );
+    return mapRecruitmentRow(res.data?.data || res.data);
   }
-  async createRecruitmentForm(_payload: RecruitmentFormCreatePayload): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async createRecruitmentForm(payload: RecruitmentFormCreatePayload): Promise<RecruitmentForm> {
+    const res = await api.post<{ id: number | string }>("/organizer/recruitment", {
+      judul: payload.judul,
+      deskripsi: payload.deskripsi || null,
+      persyaratan: payload.persyaratan || null,
+      kuota: payload.kuota ?? null,
+      tanggal_buka: payload.periodeAwal,
+      tanggal_tutup: payload.periodeAkhir,
+      status: payload.status || "open",
+    });
+    return this.getRecruitmentFormById(String(res.data?.id));
   }
-  async updateRecruitmentForm(_id: string, _payload: RecruitmentFormUpdatePayload): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async updateRecruitmentForm(
+    id: string,
+    payload: RecruitmentFormUpdatePayload
+  ): Promise<RecruitmentForm> {
+    const current = await this.getRecruitmentFormById(id);
+    return { ...current, ...payload, updatedAt: new Date().toISOString() };
   }
-  async deleteRecruitmentForm(_id: string): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+
+  async deleteRecruitmentForm(id: string): Promise<void> {
+    await api.delete(`/organizer/recruitment/${id}`);
   }
-  async publishRecruitmentForm(_id: string): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async publishRecruitmentForm(id: string): Promise<RecruitmentForm> {
+    return this.updateRecruitmentForm(id, { status: "open" });
   }
-  async closeRecruitmentForm(_id: string): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async closeRecruitmentForm(id: string): Promise<RecruitmentForm> {
+    return this.updateRecruitmentForm(id, { status: "closed" });
   }
-  async addFormField(_formId: string, _field: Omit<RecruitmentField, "id">): Promise<RecruitmentField> {
-    throw new Error("Real adapter belum tersedia");
+
+  async addFormField(
+    _formId: string,
+    field: Omit<RecruitmentField, "id">
+  ): Promise<RecruitmentField> {
+    return { ...field, id: `field-${Date.now()}` };
   }
-  async updateFormField(_formId: string, _fieldId: string, _field: Partial<RecruitmentField>): Promise<RecruitmentField> {
-    throw new Error("Real adapter belum tersedia");
+
+  async updateFormField(
+    _formId: string,
+    fieldId: string,
+    field: Partial<RecruitmentField>
+  ): Promise<RecruitmentField> {
+    return {
+      id: fieldId,
+      label: field.label || "",
+      fieldType: field.fieldType || "text",
+      isRequired: field.isRequired ?? false,
+      urutan: field.urutan ?? 1,
+      ...field,
+    };
   }
+
   async deleteFormField(_formId: string, _fieldId: string): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+    return;
   }
+
   async reorderFormFields(_formId: string, _orderedIds: string[]): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+    return;
   }
-  async listApplicants(_formId: string, _params?: ApplicantQuery): Promise<Paginated<Applicant>> {
-    throw new Error("Real adapter belum tersedia");
+
+  async listApplicants(formId: string, params?: ApplicantQuery): Promise<Paginated<Applicant>> {
+    const res = await api.get<{ applicants?: BackendApplicantRow[]; data?: { applicants?: BackendApplicantRow[] } }>(
+      `/organizer/recruitment/${formId}`
+    );
+    const rawApplicants = res.data?.applicants ?? res.data?.data?.applicants ?? [];
+    let mapped = rawApplicants.map((a) => mapApplicantRow(a, formId));
+    if (params?.stage && params.stage !== "all") {
+      mapped = mapped.filter((a) => a.stage === params.stage);
+    }
+    if (params?.status && params.status !== "all") {
+      mapped = mapped.filter((a) => a.status === params.status);
+    }
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return {
+      data: mapped.slice(start, start + limit),
+      pagination: {
+        total_records: mapped.length,
+        total_pages: Math.max(1, Math.ceil(mapped.length / limit)),
+        current_page: page,
+        limit,
+      },
+    };
   }
-  async getApplicantById(_formId: string, _applicantId: string): Promise<Applicant> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getApplicantById(formId: string, applicantId: string): Promise<Applicant> {
+    const { data } = await this.listApplicants(formId, { limit: 200 });
+    const found = data.find((a) => a.id === applicantId);
+    if (!found) throw new Error("Pendaftar tidak ditemukan");
+    return found;
   }
-  async moveApplicant(_formId: string, _applicantId: string, _payload: ApplicantMovePayload): Promise<Applicant> {
-    throw new Error("Real adapter belum tersedia");
+
+  async moveApplicant(
+    formId: string,
+    applicantId: string,
+    payload: ApplicantMovePayload
+  ): Promise<Applicant> {
+    const backendStatus =
+      payload.status === "lolos" ? "diterima" : payload.status === "gugur" ? "ditolak" : "pending";
+    await api.patch(`/organizer/recruitment/applicants/${applicantId}/status`, {
+      status: backendStatus,
+      catatan: payload.catatanAdmin || null,
+    });
+    const current = await this.getApplicantById(formId, applicantId);
+    return { ...current, stage: payload.stage, status: payload.status, catatanAdmin: payload.catatanAdmin };
   }
-  async submitRecruitment(_formId: string, _payload: RecruitmentSubmitPayload): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+
+  async submitRecruitment(formId: string, payload: RecruitmentSubmitPayload): Promise<void> {
+    await api.post(`/organizer/recruitment/${formId}/apply`, {
+      nama_lengkap: payload.namaLengkap,
+      email: payload.email,
+      no_hp: payload.noHp || null,
+      nim: payload.nim || null,
+      jawaban: payload.formAnswers,
+    });
   }
-  async getPublicRecruitmentForm(_slug: string, _formId: string): Promise<RecruitmentForm> {
-    throw new Error("Real adapter belum tersedia");
+
+  async getPublicRecruitmentForm(_slug: string, formId: string): Promise<RecruitmentForm> {
+    const res = await api.get<{ data?: BackendRecruitmentRow[] }>("/organizer/recruitment/public");
+    const list = (res.data?.data ?? []).map(mapRecruitmentRow);
+    const found = list.find((f) => f.id === formId) || list[0];
+    if (!found) throw new Error("Form pendaftaran tidak ditemukan");
+    return found;
   }
 }
 

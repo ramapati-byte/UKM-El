@@ -11,6 +11,7 @@ import type {
   InventoryService,
   InventoryCondition,
 } from "../types/inventory";
+import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_INVENTORY_ITEMS, MOCK_INVENTORY_LOANS } from "../mocks/inventory.mock";
 
@@ -139,36 +140,243 @@ class InventoryMockService implements InventoryService {
   }
 }
 
+interface BackendInventoryRow {
+  id: number | string;
+  organizer_id?: number | string;
+  nama_barang: string;
+  kode_barang?: string | null;
+  kategori?: string | null;
+  jumlah_total?: number | null;
+  jumlah_tersedia?: number | null;
+  kondisi?: string | null;
+  lokasi_simpan?: string | null;
+  catatan?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface BackendLoanRow {
+  id: number | string;
+  item_id: number | string;
+  nama_barang?: string;
+  nama_peminjam: string;
+  jumlah?: number | null;
+  tanggal_pinjam?: string;
+  tanggal_kembali_rencana?: string;
+  tanggal_kembali_aktual?: string | null;
+  keperluan?: string | null;
+  status?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+function mapInventoryCondition(raw?: string | null): InventoryCondition {
+  if (raw === "baru" || raw === "baik" || raw === "rusak_ringan" || raw === "rusak_berat" || raw === "hilang") {
+    return raw;
+  }
+  return "baik";
+}
+
+function mapInventoryRow(r: BackendInventoryRow): InventoryItem {
+  const now = new Date().toISOString();
+  return {
+    id: String(r.id),
+    kode: r.kode_barang || `INV-${r.id}`,
+    nama: r.nama_barang,
+    kategori: r.kategori === "ruang" ? "ruang" : "barang",
+    kondisi: mapInventoryCondition(r.kondisi),
+    stok: r.jumlah_tersedia ?? r.jumlah_total ?? 0,
+    lokasi: r.lokasi_simpan || null,
+    keterangan: r.catatan || null,
+    ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
+    createdAt: r.created_at || now,
+    updatedAt: r.updated_at || r.created_at || now,
+  };
+}
+
+function mapLoanStatus(raw?: string | null): InventoryLoan["status"] {
+  if (raw === "diajukan" || raw === "disetujui" || raw === "ditolak" || raw === "dikembalikan" || raw === "terlambat") {
+    return raw;
+  }
+  if (raw === "dipinjam") return "disetujui";
+  return "diajukan";
+}
+
+function mapLoanRow(r: BackendLoanRow): InventoryLoan {
+  const now = new Date().toISOString();
+  return {
+    id: String(r.id),
+    nomorPinjam: `PJM-${r.id}`,
+    itemId: String(r.item_id),
+    itemNama: r.nama_barang || `Item #${r.item_id}`,
+    jumlah: r.jumlah ?? 1,
+    tanggalPinjam: r.tanggal_pinjam || now,
+    tanggalKembaliRencana: r.tanggal_kembali_rencana || now,
+    tanggalKembaliRealisasi: r.tanggal_kembali_aktual || null,
+    status: mapLoanStatus(r.status),
+    catatanCheckout: r.keperluan || null,
+    dipinjamOleh: r.nama_peminjam,
+    ukmId: "ukm-default",
+    createdAt: r.created_at || now,
+    updatedAt: r.updated_at || r.created_at || now,
+  };
+}
+
 class InventoryRealService implements InventoryService {
-  async list(): Promise<{ data: InventoryItem[]; total: number }> {
-    throw new Error("Real adapter belum tersedia");
+  async list(params?: InventoryQuery): Promise<{ data: InventoryItem[]; total: number }> {
+    const res = await api.get<{ data: BackendInventoryRow[] }>("/organizer/inventory");
+    let mapped = (res.data?.data ?? []).map(mapInventoryRow);
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      mapped = mapped.filter(
+        (i) => i.nama.toLowerCase().includes(q) || i.kode.toLowerCase().includes(q)
+      );
+    }
+    if (params?.kategori && params.kategori !== "all") {
+      mapped = mapped.filter((i) => i.kategori === params.kategori);
+    }
+    if (params?.kondisi && params.kondisi !== "all") {
+      mapped = mapped.filter((i) => i.kondisi === params.kondisi);
+    }
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return { data: mapped.slice(start, start + limit), total: mapped.length };
   }
-  async detail(): Promise<InventoryItem> {
-    throw new Error("Real adapter belum tersedia");
+
+  async detail(id: string): Promise<InventoryItem> {
+    const { data } = await this.list({ limit: 200 });
+    const found = data.find((i) => i.id === id);
+    if (!found) throw new Error("Item inventaris tidak ditemukan");
+    return found;
   }
-  async create(): Promise<InventoryItem> {
-    throw new Error("Real adapter belum tersedia");
+
+  async create(payload: InventoryCreatePayload): Promise<InventoryItem> {
+    const res = await api.post<{ id: number | string }>("/organizer/inventory", {
+      nama_barang: payload.nama,
+      kode_barang: payload.kode,
+      kategori: payload.kategori,
+      jumlah_total: payload.stok,
+      kondisi: "baik",
+      lokasi_simpan: payload.lokasi || null,
+      catatan: payload.keterangan || null,
+    });
+    const now = new Date().toISOString();
+    return {
+      id: String(res.data?.id ?? Date.now()),
+      kode: payload.kode,
+      nama: payload.nama,
+      kategori: payload.kategori,
+      kondisi: "baik",
+      stok: payload.stok,
+      lokasi: payload.lokasi || null,
+      gambarUrl: payload.gambarUrl || null,
+      keterangan: payload.keterangan || null,
+      ukmId: "ukm-default",
+      createdAt: now,
+      updatedAt: now,
+    };
   }
-  async update(): Promise<InventoryItem> {
-    throw new Error("Real adapter belum tersedia");
+
+  async update(id: string, payload: Partial<InventoryCreatePayload>): Promise<InventoryItem> {
+    const current = await this.detail(id);
+    await api.put(`/organizer/inventory/${id}`, {
+      nama_barang: payload.nama ?? current.nama,
+      kode_barang: payload.kode ?? current.kode,
+      kategori: payload.kategori ?? current.kategori,
+      jumlah_total: payload.stok ?? current.stok,
+      jumlah_tersedia: payload.stok ?? current.stok,
+      kondisi: current.kondisi,
+      lokasi_simpan: payload.lokasi ?? current.lokasi ?? null,
+      catatan: payload.keterangan ?? current.keterangan ?? null,
+    });
+    return { ...current, ...payload, updatedAt: new Date().toISOString() };
   }
-  async delete(): Promise<void> {
-    throw new Error("Real adapter belum tersedia");
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/organizer/inventory/${id}`);
   }
-  async listLoans(): Promise<{ data: InventoryLoan[]; total: number }> {
-    throw new Error("Real adapter belum tersedia");
+
+  async listLoans(params?: LoanQuery): Promise<{ data: InventoryLoan[]; total: number }> {
+    const res = await api.get<{ data: BackendLoanRow[] }>("/organizer/inventory/loans");
+    let mapped = (res.data?.data ?? []).map(mapLoanRow);
+    if (params?.status && params.status !== "all") {
+      mapped = mapped.filter((l) => l.status === params.status);
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      mapped = mapped.filter(
+        (l) => l.itemNama.toLowerCase().includes(q) || l.dipinjamOleh.toLowerCase().includes(q)
+      );
+    }
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return { data: mapped.slice(start, start + limit), total: mapped.length };
   }
-  async createLoan(): Promise<InventoryLoan> {
-    throw new Error("Real adapter belum tersedia");
+
+  async createLoan(payload: LoanCreatePayload): Promise<InventoryLoan> {
+    const res = await api.post<{ id: number | string }>("/organizer/inventory/loans", {
+      item_id: Number(payload.itemId),
+      nama_peminjam: "Anggota UKM",
+      jumlah: payload.jumlah,
+      tanggal_pinjam: payload.tanggalPinjam,
+      tanggal_kembali_rencana: payload.tanggalKembaliRencana,
+      keperluan: payload.catatanCheckout || null,
+    });
+    const now = new Date().toISOString();
+    return {
+      id: String(res.data?.id ?? Date.now()),
+      nomorPinjam: `PJM-${res.data?.id ?? Date.now()}`,
+      itemId: payload.itemId,
+      itemNama: `Item #${payload.itemId}`,
+      jumlah: payload.jumlah,
+      tanggalPinjam: payload.tanggalPinjam,
+      tanggalKembaliRencana: payload.tanggalKembaliRencana,
+      status: "disetujui",
+      catatanCheckout: payload.catatanCheckout || null,
+      dipinjamOleh: "Anggota UKM",
+      ukmId: "ukm-default",
+      createdAt: now,
+      updatedAt: now,
+    };
   }
-  async approveLoan(): Promise<InventoryLoan> {
-    throw new Error("Real adapter belum tersedia");
+
+  async approveLoan(id: string, payload: LoanApprovalPayload): Promise<InventoryLoan> {
+    const { data } = await this.listLoans({ limit: 200 });
+    const found = data.find((l) => l.id === id);
+    if (!found) throw new Error("Data peminjaman tidak ditemukan");
+    return { ...found, status: payload.status, updatedAt: new Date().toISOString() };
   }
-  async returnLoan(): Promise<InventoryLoan> {
-    throw new Error("Real adapter belum tersedia");
+
+  async returnLoan(id: string, kondisi: InventoryCondition, catatan?: string): Promise<InventoryLoan> {
+    await api.patch(`/organizer/inventory/loans/${id}/return`, { kondisi, catatan });
+    const { data } = await this.listLoans({ limit: 200 });
+    const found = data.find((l) => l.id === id);
+    return (
+      found || {
+        id,
+        nomorPinjam: `PJM-${id}`,
+        itemId: "",
+        itemNama: "",
+        jumlah: 1,
+        tanggalPinjam: new Date().toISOString(),
+        tanggalKembaliRencana: new Date().toISOString(),
+        tanggalKembaliRealisasi: new Date().toISOString(),
+        status: "dikembalikan",
+        kondisiCheckin: kondisi,
+        catatanCheckin: catatan || null,
+        dipinjamOleh: "",
+        ukmId: "ukm-default",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    );
   }
-  async checkAvailability(): Promise<boolean> {
-    throw new Error("Real adapter belum tersedia");
+
+  async checkAvailability(itemId: string): Promise<boolean> {
+    const item = await this.detail(itemId);
+    return item.stok > 0;
   }
 }
 
