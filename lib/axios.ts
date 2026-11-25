@@ -10,7 +10,7 @@ export const getDynamicApiUrl = () => {
       return 'http://localhost:5000/api';
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'https://api.ukmelrahma.my.id/api';
+  return process.env.NEXT_PUBLIC_API_URL || 'https://backend-ukm.vercel.app/api';
 };
 
 // Helper untuk mendapatkan URL dasar Backend (misal untuk tag <img> /uploads)

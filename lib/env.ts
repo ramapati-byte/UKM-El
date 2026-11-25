@@ -9,7 +9,7 @@ export function getApiBaseUrl(): string {
       return "http://localhost:5000/api";
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL || "https://api.ukmelrahma.my.id/api";
+  return process.env.NEXT_PUBLIC_API_URL || "https://backend-ukm.vercel.app/api";
 }
 
 /** URL dasar backend (untuk aset statis seperti /uploads) */
@@ -19,12 +19,12 @@ export function getBackendBaseUrl(): string {
 
 // ─── Feature flag ────────────────────────────────────────
 
-/** Apakah memakai mock adapter (default: true selama backend baru belum siap) */
+/** Apakah memakai mock adapter (default: false agar memakai backend asli) */
 export function isMockEnabled(): boolean {
   if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_USE_MOCKS) {
     return process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   }
-  return true; // default mock aktif
+  return false;
 }
 
 /** Apakah modul event baru diaktifkan */
