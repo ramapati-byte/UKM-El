@@ -144,7 +144,7 @@ export default function PublicRecruitmentPage() {
             <strong>{form?.judul}</strong> telah diterima.
           </p>
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-6">
-            Tim kami akan menghubungi Anda melalui email <strong>{email}</strong> untuk informasi selanjutnya.
+            Pendaftaran Anda sudah masuk ke sistem seleksi panitia. Status kelulusan dan Kartu Anggota Digital dapat langsung dilihat di menu <strong>Kartu Anggota</strong> setelah disetujui.
           </p>
           <Link
             href="/"

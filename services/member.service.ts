@@ -611,7 +611,12 @@ class MemberRealService implements MemberService {
   }
 
   async getMemberCard(_mahasiswaId: string): Promise<MemberCard | null> {
-    return null;
+    try {
+      const res = await api.get<{ card: MemberCard | null }>("/mahasiswa/kartu-anggota");
+      return res.data?.card ?? null;
+    } catch {
+      return null;
+    }
   }
 
   async listRecruitmentForms(): Promise<RecruitmentForm[]> {
