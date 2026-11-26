@@ -1,5 +1,5 @@
 "use client";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 
 import { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
@@ -291,7 +291,7 @@ export default function OrganizerDiskusiPage() {
                       {e.poster ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={`${getBackendBaseUrl()}/uploads/${e.poster}`}
+                          src={resolveUploadUrl(e.poster)}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -361,7 +361,7 @@ export default function OrganizerDiskusiPage() {
                     {selectedEvent?.poster ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`${getBackendBaseUrl()}/uploads/${selectedEvent.poster}`}
+                        src={resolveUploadUrl(selectedEvent.poster)}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -498,7 +498,7 @@ export default function OrganizerDiskusiPage() {
 
                         <div className="flex items-center gap-3 mt-2">
                           <a
-                            href={`${getBackendBaseUrl()}/uploads/${m.nama_file}`}
+                            href={resolveUploadUrl(m.nama_file)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"

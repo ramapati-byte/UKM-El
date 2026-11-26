@@ -95,14 +95,12 @@ interface BackendLetterRow {
   id: number | string;
   organizer_id?: number | string;
   nomor_surat: string;
-  jenis?: string;
+  jenis_surat?: string;
   perihal: string;
-  pengirim?: string | null;
-  penerima?: string | null;
+  tujuan?: string | null;
+  isi_surat?: string | null;
   tanggal_surat?: string;
   status?: string;
-  file_url?: string | null;
-  catatan?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -110,24 +108,24 @@ interface BackendLetterRow {
 function mapLetterRow(r: BackendLetterRow): LetterEntity {
   const now = new Date().toISOString();
   const status: LetterEntity["status"] =
-    r.status === "draft" ||
-    r.status === "diajukan" ||
-    r.status === "disetujui" ||
-    r.status === "ditolak" ||
-    r.status === "diarsip"
-      ? r.status
+    r.status === "terkirim"
+      ? "disetujui"
+      : r.status === "arsip"
+      ? "diarsip"
+      : r.status === "draft"
+      ? "draft"
       : "diajukan";
   return {
     id: String(r.id),
     nomorSurat: r.nomor_surat || `SRT-${r.id}`,
-    jenis: r.jenis === "masuk" || r.jenis === "surat_masuk" ? "surat_masuk" : "surat_keluar",
+    jenis: r.jenis_surat === "masuk" ? "surat_masuk" : "surat_keluar",
     status,
     prioritas: "normal",
     perihal: r.perihal,
-    tujuan: r.penerima || null,
-    pengirim: r.pengirim || null,
+    tujuan: r.tujuan || null,
+    pengirim: null,
     tanggalSurat: r.tanggal_surat || now,
-    fileUrl: r.file_url || null,
+    fileUrl: null,
     ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
     createdBy: r.organizer_id ? `Organizer #${r.organizer_id}` : "Organizer",
     createdAt: r.created_at || now,
@@ -167,13 +165,11 @@ class LetterRealService implements LetterService {
     const nomor = await this.generateNomorSurat(payload.jenis);
     const res = await api.post<{ id: number | string }>("/organizer/letters", {
       nomor_surat: nomor,
-      jenis: payload.jenis === "surat_masuk" ? "masuk" : "keluar",
+      jenis_surat: payload.jenis === "surat_masuk" ? "masuk" : "keluar",
       perihal: payload.perihal,
-      pengirim: payload.pengirim || null,
-      penerima: payload.tujuan || null,
+      tujuan: payload.tujuan || payload.pengirim || null,
       tanggal_surat: payload.tanggalSurat,
-      status: "diajukan",
-      file_url: payload.fileUrl || null,
+      status: "draft",
     });
     const now = new Date().toISOString();
     return {
@@ -196,15 +192,19 @@ class LetterRealService implements LetterService {
 
   async updateStatus(id: string, payload: LetterStatusPayload): Promise<LetterEntity> {
     const current = await this.detail(id);
+    const backendStatus =
+      payload.status === "disetujui"
+        ? "terkirim"
+        : payload.status === "diarsip"
+        ? "arsip"
+        : "draft";
     await api.put(`/organizer/letters/${id}`, {
       nomor_surat: current.nomorSurat,
-      jenis: current.jenis === "surat_masuk" ? "masuk" : "keluar",
+      jenis_surat: current.jenis === "surat_masuk" ? "masuk" : "keluar",
       perihal: current.perihal,
-      pengirim: current.pengirim,
-      penerima: current.tujuan,
+      tujuan: current.tujuan || current.pengirim,
       tanggal_surat: current.tanggalSurat,
-      status: payload.status,
-      catatan: payload.catatan || null,
+      status: backendStatus,
     });
     return { ...current, status: payload.status, updatedAt: new Date().toISOString() };
   }

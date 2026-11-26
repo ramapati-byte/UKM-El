@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import api from "@/lib/axios";
 import PublicShell from "@/components/shell/PublicShell";
 import Card, { CardBody } from "@/components/ui/Card";
@@ -75,9 +75,9 @@ const MISI = [
 function mapToEventEntity(w: RawWorkshop): EventEntity {
   const isFree = !w.harga || w.harga === 0 || w.tipe_event === "gratis";
   const posterUrl = w.poster
-    ? w.poster.startsWith("http")
+    ? w.poster.startsWith("http") || w.poster.startsWith("data:")
       ? w.poster
-      : `${getBackendBaseUrl()}/uploads/${w.poster.replace(/^\/uploads\//, "").replace(/^\//, "")}`
+      : resolveUploadUrl(w.poster.replace(/^\/uploads\//, "").replace(/^\//, ""))
     : null;
 
   return {

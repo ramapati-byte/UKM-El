@@ -496,7 +496,11 @@ function mapMemberRow(r: BackendMemberRow): MemberEntity {
 function mapRecruitmentRow(r: BackendRecruitmentRow): RecruitmentForm {
   const now = new Date().toISOString();
   const status: RecruitmentForm["status"] =
-    r.status === "open" || r.status === "closed" || r.status === "draft" ? r.status : "open";
+    r.status === "open" || r.status === "buka"
+      ? "open"
+      : r.status === "closed" || r.status === "tutup"
+      ? "closed"
+      : "draft";
   return {
     id: String(r.id),
     ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
@@ -504,12 +508,12 @@ function mapRecruitmentRow(r: BackendRecruitmentRow): RecruitmentForm {
     deskripsi: r.deskripsi || undefined,
     persyaratan: r.persyaratan || undefined,
     kuota: r.kuota ?? undefined,
-    periodeAwal: r.tanggal_buka || now,
-    periodeAkhir: r.tanggal_tutup || now,
+    periodeAwal: r.tanggal_buka || r.created_at || now,
+    periodeAkhir: r.tanggal_tutup || (r as unknown as { batas_pendaftaran?: string }).batas_pendaftaran || now,
     status,
     stages: ["pendaftaran", "verifikasi", "seleksi", "pengumuman"],
     formFields: [],
-    totalPendaftar: r.total_pendaftar ?? 0,
+    totalPendaftar: r.total_pendaftar ?? (r as unknown as { jumlah_pelamar?: number }).jumlah_pelamar ?? 0,
     createdAt: r.created_at || now,
     updatedAt: r.updated_at || r.created_at || now,
   };

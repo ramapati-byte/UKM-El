@@ -1,6 +1,7 @@
 // services/event.real.ts — Implementasi adapter nyata yang memetakan ke endpoint backend-event
 
 import api from "../lib/api";
+import { resolveUploadUrl } from "../lib/axios";
 import type { Paginated } from "../types/common";
 import type {
   EventEntity,
@@ -76,7 +77,7 @@ function mapWorkshopToEntity(w: BackendWorkshop): EventEntity {
     title: w.judul,
     slug: w.judul ? w.judul.toLowerCase().replace(/[^a-z0-9]+/g, "-") : `event-${w.id}`,
     description: w.deskripsi || "",
-    poster_url: w.poster ? `/uploads/${w.poster}` : null,
+    poster_url: w.poster ? resolveUploadUrl(w.poster) : null,
     starts_at: w.tanggal_waktu,
     ends_at: w.jam_selesai || null,
     location: w.lokasi || "",
@@ -103,7 +104,7 @@ function mapWorkshopToEntity(w: BackendWorkshop): EventEntity {
           id: s.id,
           event_id: s.event_id,
           name: s.nama_sponsor,
-          logo_url: s.logo ? `/uploads/${s.logo}` : "",
+          logo_url: s.logo ? resolveUploadUrl(s.logo) : "",
         }))
       : [],
   };

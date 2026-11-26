@@ -1,6 +1,6 @@
 "use client";
 
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import { useEffect, useState, useRef } from "react";
 import MahasiswaLayout from "../../../components/MahasiswaLayout";
 import api from "../../../lib/api";
@@ -44,7 +44,7 @@ export default function ProfilPage() {
           konfirmasi_password: "",
         });
         if (res.data.foto_mahasiswa) {
-          setFotoPreview(`${getBackendBaseUrl()}/uploads/${res.data.foto_mahasiswa}`);
+          setFotoPreview(resolveUploadUrl(res.data.foto_mahasiswa));
         }
       } catch (err) {
         console.error(err);

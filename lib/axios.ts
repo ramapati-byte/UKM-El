@@ -18,6 +18,16 @@ export const getBackendBaseUrl = () => {
   return getDynamicApiUrl();
 };
 
+// Helper untuk resolve URL gambar: mendukung Data URL (base64 dari DB), URL penuh, atau path /uploads
+export const resolveUploadUrl = (value?: string | null): string => {
+  if (!value) return '';
+  if (value.startsWith('data:') || value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+  const clean = value.replace(/^\/?uploads\//, '');
+  return `${getDynamicApiUrl()}/uploads/${clean}`;
+};
+
 // Helper untuk mendapatkan header UKM jika multi-tenant diaktifkan
 export const getUkHeaders = (): Record<string, string> => {
   if (!isMultiTenantEnabled()) return {};

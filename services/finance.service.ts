@@ -8,6 +8,7 @@ import type {
   FinanceSummary,
   FinanceService,
 } from "../types/finance";
+import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_FINANCE_TRANSACTIONS, MOCK_FINANCE_SUMMARY } from "../mocks/finance.mock";
 
@@ -91,18 +92,96 @@ class FinanceMockService implements FinanceService {
   }
 }
 
+interface BackendFinanceRow {
+  id: number | string;
+  organizer_id?: number | string;
+  nomor_transaksi?: string;
+  jenis: string;
+  kategori?: string;
+  status?: string;
+  nominal: number | string;
+  deskripsi?: string;
+  tanggal_transaksi?: string;
+  bukti_file?: string | null;
+  catatan?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+function mapFinanceRow(r: BackendFinanceRow): FinanceTransaction {
+  const now = new Date().toISOString();
+  const status: FinanceTransaction["status"] =
+    r.status === "diajukan" ||
+    r.status === "disetujui" ||
+    r.status === "ditolak" ||
+    r.status === "dicairkan" ||
+    r.status === "dibatalkan"
+      ? r.status
+      : "diajukan";
+  const kategori: FinanceTransaction["kategori"] =
+    r.kategori === "operasional" ||
+    r.kategori === "kegiatan" ||
+    r.kategori === "kepentingan" ||
+    r.kategori === "lainnya"
+      ? r.kategori
+      : "operasional";
+  return {
+    id: String(r.id),
+    nomorTransaksi: r.nomor_transaksi || `TRX-${r.id}`,
+    jenis: r.jenis === "pemasukan" ? "pemasukan" : "pengeluaran",
+    kategori,
+    status,
+    nominal: Number(r.nominal) || 0,
+    deskripsi: r.deskripsi || "",
+    tanggalTransaksi: r.tanggal_transaksi || now,
+    buktiFile: r.bukti_file ?? null,
+    ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
+    createdBy: "Organizer",
+    catatan: r.catatan ?? null,
+    createdAt: r.created_at || now,
+    updatedAt: r.updated_at || r.created_at || now,
+  };
+}
+
 class FinanceRealService implements FinanceService {
-  async list(): Promise<{ data: FinanceTransaction[]; total: number }> {
-    return { data: [], total: 0 };
+  async list(params?: FinanceQuery): Promise<{ data: FinanceTransaction[]; total: number }> {
+    const res = await api.get<{ data: BackendFinanceRow[] }>("/organizer/finance");
+    let mapped = (res.data?.data ?? []).map(mapFinanceRow);
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      mapped = mapped.filter(
+        (t) => t.deskripsi.toLowerCase().includes(q) || t.nomorTransaksi.toLowerCase().includes(q)
+      );
+    }
+    if (params?.jenis && params.jenis !== "all") mapped = mapped.filter((t) => t.jenis === params.jenis);
+    if (params?.status && params.status !== "all") mapped = mapped.filter((t) => t.status === params.status);
+    if (params?.kategori && params.kategori !== "all") mapped = mapped.filter((t) => t.kategori === params.kategori);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return { data: mapped.slice(start, start + limit), total: mapped.length };
   }
+
   async detail(id: string): Promise<FinanceTransaction> {
-    throw new Error(`Transaksi #${id} tidak ditemukan`);
+    const { data } = await this.list({ limit: 200 });
+    const found = data.find((t) => t.id === id);
+    if (!found) throw new Error(`Transaksi #${id} tidak ditemukan`);
+    return found;
   }
+
   async create(payload: FinanceCreatePayload): Promise<FinanceTransaction> {
+    const res = await api.post<{ id: number | string; nomor_transaksi?: string }>("/organizer/finance", {
+      jenis: payload.jenis,
+      kategori: payload.kategori,
+      nominal: payload.nominal,
+      deskripsi: payload.deskripsi,
+      tanggal_transaksi: payload.tanggalTransaksi,
+      bukti_file: payload.buktiFile ?? null,
+    });
     const now = new Date().toISOString();
     return {
-      id: `trx-${Date.now()}`,
-      nomorTransaksi: `TRX-${Date.now()}`,
+      id: String(res.data?.id ?? Date.now()),
+      nomorTransaksi: res.data?.nomor_transaksi || `TRX-${Date.now()}`,
       jenis: payload.jenis,
       kategori: payload.kategori,
       status: "diajukan",
@@ -117,33 +196,39 @@ class FinanceRealService implements FinanceService {
       updatedAt: now,
     };
   }
+
   async updateStatus(id: string, payload: FinanceApprovalPayload): Promise<FinanceTransaction> {
-    const now = new Date().toISOString();
-    return {
-      id,
-      nomorTransaksi: `TRX-${id}`,
-      jenis: "pengeluaran",
-      kategori: "operasional",
+    await api.patch(`/organizer/finance/${id}/status`, {
       status: payload.status,
-      nominal: 0,
-      deskripsi: "",
-      tanggalTransaksi: now,
-      ukmId: "ukm-default",
-      createdBy: "Organizer",
       catatan: payload.catatan ?? null,
-      createdAt: now,
-      updatedAt: now,
+    });
+    return this.detail(id);
+  }
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/organizer/finance/${id}`);
+  }
+
+  async summary(): Promise<FinanceSummary> {
+    const { data } = await this.list({ limit: 500 });
+    const totalPemasukan = data
+      .filter((t) => t.jenis === "pemasukan" && t.status !== "ditolak" && t.status !== "dibatalkan")
+      .reduce((sum, t) => sum + t.nominal, 0);
+    const totalPengeluaran = data
+      .filter((t) => t.jenis === "pengeluaran" && t.status !== "ditolak" && t.status !== "dibatalkan")
+      .reduce((sum, t) => sum + t.nominal, 0);
+    return {
+      totalPemasukan,
+      totalPengeluaran,
+      saldo: totalPemasukan - totalPengeluaran,
+      totalTransaksi: data.length,
     };
   }
-  async delete(): Promise<void> {
-    return;
-  }
-  async summary(): Promise<FinanceSummary> {
-    return { totalPemasukan: 0, totalPengeluaran: 0, saldo: 0, totalTransaksi: 0 };
-  }
+
   async exportPdf(): Promise<Blob> {
     return new Blob(["Laporan Keuangan"], { type: "application/pdf" });
   }
+
   async exportExcel(): Promise<Blob> {
     return new Blob(["Laporan Keuangan"], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

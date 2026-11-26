@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import Card, {
@@ -296,7 +296,7 @@ export default function ManageMahasiswaPage() {
                 src={
                   mhs.foto_mahasiswa.startsWith("http")
                     ? mhs.foto_mahasiswa
-                    : `${getBackendBaseUrl()}/uploads/${mhs.foto_mahasiswa}`
+                    : resolveUploadUrl(mhs.foto_mahasiswa)
                 }
                 alt=""
                 className="h-full w-full object-cover"

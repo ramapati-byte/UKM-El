@@ -1,6 +1,6 @@
 "use client";
 
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import { useEffect, useState, useRef } from "react";
 import MahasiswaLayout from "../../../components/MahasiswaLayout";
 import api from "../../../lib/api";
@@ -166,7 +166,7 @@ export default function DiskusiPage() {
                           {t.poster ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={`${getBackendBaseUrl()}/uploads/${t.poster}`}
+                              src={resolveUploadUrl(t.poster)}
                               alt={t.judul}
                               className="w-full h-full object-cover"
                             />
@@ -238,7 +238,7 @@ export default function DiskusiPage() {
                       {selectedEvent?.poster ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={`${getBackendBaseUrl()}/uploads/${selectedEvent.poster}`}
+                          src={resolveUploadUrl(selectedEvent.poster)}
                           alt={selectedEvent?.judul}
                           className="w-full h-full object-cover"
                         />
@@ -381,7 +381,7 @@ export default function DiskusiPage() {
 
                             <div className="flex items-center gap-3 mt-2">
                               <a
-                                href={`${getBackendBaseUrl()}/uploads/${m.nama_file}`}
+                                href={resolveUploadUrl(m.nama_file)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"

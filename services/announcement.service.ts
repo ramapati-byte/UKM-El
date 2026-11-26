@@ -146,8 +146,8 @@ class AnnouncementRealService implements AnnouncementService {
       judul: payload.judul,
       isi: payload.isi,
       kategori: payload.audience || "Umum",
-      prioritas: "normal",
-      is_published: payload.isActive !== false ? 1 : 0,
+      status: payload.isActive !== false ? "published" : "draft",
+      is_pinned: 0,
     });
     return {
       id: String(res.data?.id ?? Date.now()),
@@ -170,7 +170,7 @@ class AnnouncementRealService implements AnnouncementService {
       judul: payload.judul ?? current.judul,
       isi: payload.isi ?? current.isi,
       kategori: payload.audience ?? current.audience,
-      is_published: (payload.isActive ?? current.isActive) ? 1 : 0,
+      status: (payload.isActive ?? current.isActive) ? "published" : "draft",
     });
     return { ...current, ...payload, updatedAt: new Date().toISOString() };
   }

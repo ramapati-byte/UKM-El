@@ -1,6 +1,6 @@
 "use client";
 
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -207,7 +207,7 @@ export default function DetailEventPage() {
                 {event.poster ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`${getBackendBaseUrl()}/uploads/${event.poster}`}
+                    src={resolveUploadUrl(event.poster)}
                     className="w-full h-full object-cover"
                     alt={event.judul}
                   />
@@ -329,7 +329,7 @@ export default function DetailEventPage() {
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={`${getBackendBaseUrl()}/uploads/${s.logo}`}
+                              src={resolveUploadUrl(s.logo)}
                               alt={s.nama_sponsor}
                               className="max-w-full max-h-full object-contain"
                               title={s.nama_sponsor}

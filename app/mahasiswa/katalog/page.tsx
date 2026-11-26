@@ -7,7 +7,7 @@ import Card, { CardBody } from "../../../components/ui/Card";
 import Badge from "../../../components/ui/Badge";
 import EmptyState from "../../../components/ui/EmptyState";
 import LoadingSkeleton from "../../../components/ui/LoadingSkeleton";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import api from "../../../lib/api";
 
 interface KatalogEvent {
@@ -90,7 +90,7 @@ export default function KatalogEventPage() {
                     {row.poster ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`${getBackendBaseUrl()}/uploads/${row.poster}`}
+                        src={resolveUploadUrl(row.poster)}
                         alt={row.judul}
                         className="w-full h-full object-cover"
                       />

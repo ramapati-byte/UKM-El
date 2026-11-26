@@ -9,7 +9,7 @@ import Card, { CardBody } from "../../../components/ui/Card";
 import Badge from "../../../components/ui/Badge";
 import EmptyState from "../../../components/ui/EmptyState";
 import LoadingSkeleton from "../../../components/ui/LoadingSkeleton";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import Swal from "sweetalert2";
 
 interface EventStats {
@@ -128,7 +128,7 @@ export default function KelolaPendaftarPage() {
                     {event.poster ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`${getBackendBaseUrl()}/uploads/${event.poster}`}
+                        src={resolveUploadUrl(event.poster)}
                         alt={event.judul}
                         className="w-full h-full object-cover"
                       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import MahasiswaLayout from "../../../components/MahasiswaLayout";
@@ -174,7 +174,7 @@ export default function MahasiswaDashboard() {
                         {row.poster ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={`${getBackendBaseUrl()}/uploads/${row.poster}`}
+                            src={resolveUploadUrl(row.poster)}
                             className="w-full h-full object-cover"
                             alt={row.judul}
                           />
@@ -262,7 +262,7 @@ export default function MahasiswaDashboard() {
                       {agenda.poster ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={`${getBackendBaseUrl()}/uploads/${agenda.poster}`}
+                          src={resolveUploadUrl(agenda.poster)}
                           className="w-full h-full object-cover"
                           alt={agenda.judul}
                         />

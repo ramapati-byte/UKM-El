@@ -86,11 +86,17 @@ interface BackendProgramRow {
 }
 
 function mapProgramStatus(raw?: string | null): ProgramEntity["status"] {
-  if (raw === "draft" || raw === "aktif" || raw === "selesai" || raw === "dibatalkan") {
-    return raw;
-  }
-  if (raw === "berjalan") return "aktif";
+  if (raw === "berjalan" || raw === "aktif") return "aktif";
+  if (raw === "selesai") return "selesai";
+  if (raw === "ditunda" || raw === "dibatalkan") return "dibatalkan";
   return "draft";
+}
+
+function toBackendProgramStatus(status?: ProgramEntity["status"]): string {
+  if (status === "aktif") return "berjalan";
+  if (status === "selesai") return "selesai";
+  if (status === "dibatalkan") return "ditunda";
+  return "rencana";
 }
 
 function mapProgramRow(r: BackendProgramRow): ProgramEntity {
@@ -146,13 +152,10 @@ class ProgramRealService implements ProgramService {
     const res = await api.post<{ id: number | string }>("/organizer/programs", {
       nama_program: payload.nama,
       deskripsi: payload.deskripsi || null,
-      periode: payload.periode,
       divisi: payload.divisi || null,
-      target_peserta: payload.target,
-      tanggal_mulai: payload.tanggalMulai,
-      tanggal_selesai: payload.tanggalSelesai,
+      target_tanggal: payload.tanggalSelesai ? String(payload.tanggalSelesai).slice(0, 10) : null,
       progress: payload.realisasi ?? 0,
-      status: payload.status,
+      status: toBackendProgramStatus(payload.status),
     });
     const now = new Date().toISOString();
     return {
@@ -169,13 +172,10 @@ class ProgramRealService implements ProgramService {
     await api.put(`/organizer/programs/${id}`, {
       nama_program: merged.nama,
       deskripsi: merged.deskripsi || null,
-      periode: merged.periode,
       divisi: merged.divisi || null,
-      target_peserta: merged.target,
-      tanggal_mulai: merged.tanggalMulai,
-      tanggal_selesai: merged.tanggalSelesai,
+      target_tanggal: merged.tanggalSelesai ? String(merged.tanggalSelesai).slice(0, 10) : null,
       progress: merged.realisasi,
-      status: merged.status,
+      status: toBackendProgramStatus(merged.status),
     });
     return { ...merged, updatedAt: new Date().toISOString() };
   }

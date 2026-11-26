@@ -1,6 +1,6 @@
 "use client";
 
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "../../../lib/api";
@@ -102,7 +102,7 @@ export default function KelolaPendaftarMahasiswaPage() {
                     {event.poster ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`${getBackendBaseUrl()}/uploads/${event.poster}`}
+                        src={resolveUploadUrl(event.poster)}
                         alt={event.judul}
                         className="w-full h-full object-cover"
                       />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { getBackendBaseUrl } from "@/lib/axios";
+import { getBackendBaseUrl, resolveUploadUrl } from "@/lib/axios";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import Card, {
@@ -252,7 +252,7 @@ export default function ManageEventsPage() {
             {event.poster ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={`${getBackendBaseUrl()}/uploads/${event.poster}`}
+                src={resolveUploadUrl(event.poster)}
                 alt=""
                 className="h-full w-full object-cover"
               />
