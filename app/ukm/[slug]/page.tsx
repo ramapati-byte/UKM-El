@@ -158,6 +158,13 @@ export default function UkmPublicProfilePage({
                 )}
               </div>
             </div>
+            <div className="shrink-0">
+              <Link href={`/ukm/${ukm.ukmSlug}/recruitment`}>
+                <Button variant="primary" icon="bi-person-plus">
+                  Daftar Open Recruitment
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 

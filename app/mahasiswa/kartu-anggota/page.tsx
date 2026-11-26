@@ -171,7 +171,7 @@ export default function KartuAnggotaPage() {
             title="Belum Menjadi Anggota"
             message="Anda belum terdaftar sebagai anggota aktif UKM manapun. Daftarkan diri melalui open recruitment."
             action={
-              <Button variant="primary" icon="bi-person-plus" onClick={() => window.location.href = "/mahasiswa/katalog"}>
+              <Button variant="primary" icon="bi-person-plus" onClick={() => window.location.href = "/ukm"}>
                 Jelajahi UKM
               </Button>
             }

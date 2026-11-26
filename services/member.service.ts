@@ -742,10 +742,12 @@ class MemberRealService implements MemberService {
 
   async submitRecruitment(formId: string, payload: RecruitmentSubmitPayload): Promise<void> {
     await api.post(`/organizer/recruitment/${formId}/apply`, {
+      nama_pelamar: payload.namaLengkap,
       nama_lengkap: payload.namaLengkap,
       email: payload.email,
       no_hp: payload.noHp || null,
       nim: payload.nim || null,
+      motivasi: payload.formAnswers?.map((a) => a.value).filter(Boolean).join(" | ") || null,
       jawaban: payload.formAnswers,
     });
   }
