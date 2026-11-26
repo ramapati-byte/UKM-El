@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
@@ -76,9 +77,39 @@ const MOCK_LEGACY_ARCHIVE: LegacyArchiveItem[] = [
 ];
 
 export default function LegacyArchivePage() {
-  const [data] = useState<LegacyArchiveItem[]>(MOCK_LEGACY_ARCHIVE);
+  const [data, setData] = useState<LegacyArchiveItem[]>([]);
   const [search, setSearch] = useState("");
   const [kategori, setKategori] = useState("all");
+
+  useEffect(() => {
+    api
+      .get<{
+        data?: Array<{
+          id: number;
+          judul: string;
+          tanggal_waktu?: string;
+          ukm_penyelenggara?: string;
+          penyelenggara_nama?: string;
+          status?: string;
+        }>;
+      }>("/admin/arsip", { params: { limit: 100 } })
+      .then((res) => {
+        const rows = res.data?.data ?? [];
+        setData(
+          rows.map((r) => ({
+            id: String(r.id),
+            kode: `EV-${r.id}`,
+            judul: r.judul,
+            kategori: "event",
+            tahun: r.tanggal_waktu ? String(new Date(r.tanggal_waktu).getFullYear()) : "-",
+            penyelenggaraAsal: r.ukm_penyelenggara || r.penyelenggara_nama || "BEM El Rahma",
+            statusMigrasi: r.status === "approved" ? "migrated" : "archived_only",
+            tanggalArsip: r.tanggal_waktu || new Date().toISOString(),
+          }))
+        );
+      })
+      .catch(() => setData([]));
+  }, []);
 
   const filtered = data.filter((item) => {
     const matchSearch =

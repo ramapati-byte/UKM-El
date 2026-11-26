@@ -380,35 +380,18 @@ export class EventRealService implements EventService {
     }
   }
 
-  async getLPJ(_eventId: number): Promise<EventLPJ | null> {
-    // Backend belum memiliki tabel LPJ; tampilkan null atau simpan lokal
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(`lpj_${_eventId}`);
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {}
-      }
+  async getLPJ(eventId: number): Promise<EventLPJ | null> {
+    try {
+      const res = await api.get<{ lpj: EventLPJ | null }>(`/events/${eventId}/lpj`);
+      return res.data?.lpj ?? null;
+    } catch {
+      return null;
     }
-    return null;
   }
 
   async saveLPJ(eventId: number, payload: LPJSavePayload): Promise<EventLPJ> {
-    const lpj: EventLPJ = {
-      id: Date.now(),
-      event_id: eventId,
-      summary: payload.summary,
-      participant_count: payload.participant_count,
-      budget_planned: payload.budget_planned,
-      budget_realized: payload.budget_realized,
-      status: payload.submit ? "submitted" : "draft",
-      attachments: [],
-      created_at: new Date().toISOString(),
-    };
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`lpj_${eventId}`, JSON.stringify(lpj));
-    }
-    return lpj;
+    const res = await api.put<{ lpj: EventLPJ }>(`/events/${eventId}/lpj`, payload);
+    return res.data.lpj;
   }
 
   async getAttendanceSummary(eventId: number): Promise<AttendanceSummary> {

@@ -515,7 +515,19 @@ function mapRecruitmentRow(r: BackendRecruitmentRow): RecruitmentForm {
     periodeAkhir: r.tanggal_tutup || (r as unknown as { batas_pendaftaran?: string }).batas_pendaftaran || now,
     status,
     stages: ["pendaftaran", "verifikasi", "seleksi", "pengumuman"],
-    formFields: [],
+    formFields: (() => {
+      const raw = (r as unknown as { form_fields?: unknown }).form_fields;
+      if (Array.isArray(raw)) return raw as RecruitmentField[];
+      if (typeof raw === "string") {
+        try {
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    })(),
     totalPendaftar: r.total_pendaftar ?? (r as unknown as { jumlah_pelamar?: number }).jumlah_pelamar ?? 0,
     createdAt: r.created_at || now,
     updatedAt: r.updated_at || r.created_at || now,
@@ -645,6 +657,7 @@ class MemberRealService implements MemberService {
       tanggal_buka: payload.periodeAwal,
       tanggal_tutup: payload.periodeAkhir,
       status: payload.status || "open",
+      form_fields: payload.formFields ?? [],
     });
     return this.getRecruitmentFormById(String(res.data?.id));
   }
@@ -659,6 +672,7 @@ class MemberRealService implements MemberService {
       kuota: payload.kuota,
       tanggal_tutup: payload.periodeAkhir,
       status: payload.status,
+      form_fields: payload.formFields,
     });
     return this.getRecruitmentFormById(id);
   }
@@ -676,18 +690,22 @@ class MemberRealService implements MemberService {
   }
 
   async addFormField(
-    _formId: string,
+    formId: string,
     field: Omit<RecruitmentField, "id">
   ): Promise<RecruitmentField> {
-    return { ...field, id: `field-${Date.now()}` };
+    const form = await this.getRecruitmentFormById(formId);
+    const created: RecruitmentField = { ...field, id: `field-${Date.now()}` };
+    await this.updateRecruitmentForm(formId, { formFields: [...form.formFields, created] });
+    return created;
   }
 
   async updateFormField(
-    _formId: string,
+    formId: string,
     fieldId: string,
     field: Partial<RecruitmentField>
   ): Promise<RecruitmentField> {
-    return {
+    const form = await this.getRecruitmentFormById(formId);
+    let updatedField: RecruitmentField = {
       id: fieldId,
       label: field.label || "",
       fieldType: field.fieldType || "text",
@@ -695,14 +713,34 @@ class MemberRealService implements MemberService {
       urutan: field.urutan ?? 1,
       ...field,
     };
+    const nextFields = form.formFields.map((f) => {
+      if (f.id === fieldId) {
+        updatedField = { ...f, ...field };
+        return updatedField;
+      }
+      return f;
+    });
+    await this.updateRecruitmentForm(formId, { formFields: nextFields });
+    return updatedField;
   }
 
-  async deleteFormField(_formId: string, _fieldId: string): Promise<void> {
-    return;
+  async deleteFormField(formId: string, fieldId: string): Promise<void> {
+    const form = await this.getRecruitmentFormById(formId);
+    await this.updateRecruitmentForm(formId, {
+      formFields: form.formFields.filter((f) => f.id !== fieldId),
+    });
   }
 
-  async reorderFormFields(_formId: string, _orderedIds: string[]): Promise<void> {
-    return;
+  async reorderFormFields(formId: string, orderedIds: string[]): Promise<void> {
+    const form = await this.getRecruitmentFormById(formId);
+    const byId = new Map(form.formFields.map((f) => [f.id, f]));
+    const reordered = orderedIds
+      .map((fid, idx) => {
+        const item = byId.get(fid);
+        return item ? { ...item, urutan: idx + 1 } : null;
+      })
+      .filter((x): x is RecruitmentField => Boolean(x));
+    await this.updateRecruitmentForm(formId, { formFields: reordered });
   }
 
   async listApplicants(formId: string, params?: ApplicantQuery): Promise<Paginated<Applicant>> {

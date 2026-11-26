@@ -1,20 +1,61 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 import AppShell from "@/components/shell/AppShell";
 import PageHeader from "@/components/ui/PageHeader";
 import DataTable from "@/components/ui/DataTable";
 
-const MOCK_AUDIT = [
-  { id: 1, aktor: "admin", aksi: "Verifikasi UKM BEM", target: "BEM El Rahma", tanggal: "2026-11-02 08:00", detail: "Status diubah menjadi verified" },
-  { id: 2, aktor: "pengurus", aksi: "Buat Surat Izin", target: "SIK/2026/11/001", tanggal: "2026-11-01 09:00", detail: "Surat izin kegiatan KTI" },
-  { id: 3, aktor: "bendahara", aksi: "Ajukan Dana", target: "FIN/2026/11/003", tanggal: "2026-11-05 10:00", detail: "Pengajuan sewa ruang seminar" },
-];
+interface AuditRow {
+  id: number | string;
+  aktor: string;
+  aksi: string;
+  target: string;
+  tanggal: string;
+  detail: string;
+}
 
 export default function AuditPage() {
+  const [rows, setRows] = useState<AuditRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<{
+        data?: Array<{
+          id: number;
+          user_name?: string;
+          user_role?: string;
+          aksi: string;
+          modul: string;
+          detail?: string;
+          created_at?: string;
+        }>;
+      }>("/admin/audit")
+      .then((res) => {
+        const list = res.data?.data ?? [];
+        setRows(
+          list.map((r) => ({
+            id: r.id,
+            aktor: r.user_name || r.user_role || "sistem",
+            aksi: r.aksi,
+            target: r.modul,
+            tanggal: r.created_at
+              ? new Date(r.created_at).toLocaleString("id-ID")
+              : "-",
+            detail: r.detail || "-",
+          }))
+        );
+      })
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <AppShell title="Audit Log" subtitle="Riwayat aktivitas sistem">
       <PageHeader title="Audit Trail" />
       <DataTable
+        loading={loading}
         columns={[
           { key: "aktor", label: "Aktor" },
           { key: "aksi", label: "Aksi" },
@@ -22,7 +63,7 @@ export default function AuditPage() {
           { key: "tanggal", label: "Tanggal" },
           { key: "detail", label: "Detail" },
         ]}
-        data={MOCK_AUDIT}
+        data={rows}
       />
     </AppShell>
   );

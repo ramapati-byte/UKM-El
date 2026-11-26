@@ -8,6 +8,7 @@ import type {
   DocumentService,
   DocumentType,
 } from "../types/document";
+import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
 import { MOCK_DOCUMENT_FOLDERS, MOCK_DOCUMENTS, MOCK_DOCUMENT_VERSIONS } from "../mocks/document.mock";
 
@@ -74,39 +75,124 @@ class DocumentMockService implements DocumentService {
   }
 }
 
+interface BackendFolderRow {
+  id: number | string;
+  nama: string;
+  parent_id?: number | string | null;
+  organizer_id?: number | string;
+  created_at?: string;
+}
+
+interface BackendDocRow {
+  id: number | string;
+  judul: string;
+  tipe?: string;
+  file_url?: string;
+  ukuran_file?: number;
+  versi?: number;
+  folder_id?: number | string | null;
+  organizer_id?: number | string;
+  diunggah_oleh?: string;
+  created_at?: string;
+  deskripsi?: string | null;
+}
+
+function mapDocRow(r: BackendDocRow): DocumentEntity {
+  const tipe: DocumentType =
+    r.tipe === "surat" ||
+    r.tipe === "laporan" ||
+    r.tipe === "proker" ||
+    r.tipe === "keuangan" ||
+    r.tipe === "kepengurusan" ||
+    r.tipe === "lainnya"
+      ? r.tipe
+      : "lainnya";
+  return {
+    id: String(r.id),
+    judul: r.judul,
+    tipe,
+    fileUrl: r.file_url || "",
+    ukuranFile: Number(r.ukuran_file) || 0,
+    versi: Number(r.versi) || 1,
+    folderId: r.folder_id ? String(r.folder_id) : null,
+    ukmId: r.organizer_id ? String(r.organizer_id) : "ukm-default",
+    diunggahOleh: r.diunggah_oleh || "Organizer",
+    diunggahPada: r.created_at || new Date().toISOString(),
+    deskripsi: r.deskripsi ?? null,
+  };
+}
+
 class DocumentRealService implements DocumentService {
   async listFolders(): Promise<DocumentFolder[]> {
-    return [];
+    const res = await api.get<{ data: BackendFolderRow[] }>("/organizer/documents/folders");
+    return (res.data?.data ?? []).map((f) => ({
+      id: String(f.id),
+      nama: f.nama,
+      parentId: f.parent_id ? String(f.parent_id) : null,
+      ukmId: f.organizer_id ? String(f.organizer_id) : "ukm-default",
+      createdAt: f.created_at || new Date().toISOString(),
+    }));
   }
-  async listDocuments(): Promise<{ data: DocumentEntity[]; total: number }> {
-    return { data: [], total: 0 };
+
+  async listDocuments(params?: DocumentQuery): Promise<{ data: DocumentEntity[]; total: number }> {
+    const res = await api.get<{ data: BackendDocRow[] }>("/organizer/documents");
+    let mapped = (res.data?.data ?? []).map(mapDocRow);
+    if (params?.tipe && params.tipe !== "all") {
+      mapped = mapped.filter((d) => d.tipe === params.tipe);
+    }
+    if (params?.folderId) {
+      mapped = mapped.filter((d) => d.folderId === params.folderId);
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      mapped = mapped.filter((d) => d.judul.toLowerCase().includes(q));
+    }
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const start = (page - 1) * limit;
+    return { data: mapped.slice(start, start + limit), total: mapped.length };
   }
+
   async detail(id: string): Promise<DocumentEntity> {
-    throw new Error(`Dokumen #${id} tidak ditemukan`);
+    const { data } = await this.listDocuments({ limit: 200 });
+    const found = data.find((d) => d.id === id);
+    if (!found) throw new Error(`Dokumen #${id} tidak ditemukan`);
+    return found;
   }
+
   async upload(formData: FormData): Promise<DocumentEntity> {
-    const file = formData.get("file") as File | null;
-    return {
-      id: `doc-${Date.now()}`,
-      judul: (formData.get("judul") as string) || file?.name || "Dokumen Baru",
-      tipe: ((formData.get("tipe") as DocumentType) || "lainnya"),
-      fileUrl: "",
-      ukuranFile: file?.size ?? 0,
-      versi: 1,
-      folderId: (formData.get("folderId") as string) || null,
-      ukmId: "ukm-default",
-      diunggahOleh: "Organizer",
-      diunggahPada: new Date().toISOString(),
-    };
+    const res = await api.post<{ id: number | string }>("/organizer/documents", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return this.detail(String(res.data?.id));
   }
-  async download(): Promise<Blob> {
-    return new Blob([""], { type: "application/pdf" });
+
+  async download(id: string): Promise<Blob> {
+    const doc = await this.detail(id);
+    if (doc.fileUrl && doc.fileUrl.startsWith("data:")) {
+      const res = await fetch(doc.fileUrl);
+      return res.blob();
+    }
+    return new Blob([doc.judul], { type: "application/pdf" });
   }
-  async delete(): Promise<void> {
-    return;
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/organizer/documents/${id}`);
   }
-  async listVersions(): Promise<DocumentVersion[]> {
-    return [];
+
+  async listVersions(documentId: string): Promise<DocumentVersion[]> {
+    const doc = await this.detail(documentId);
+    return [
+      {
+        id: `ver-${doc.id}`,
+        documentId: doc.id,
+        versi: doc.versi,
+        fileUrl: doc.fileUrl,
+        ukuranFile: doc.ukuranFile,
+        diunggahOleh: doc.diunggahOleh,
+        diunggahPada: doc.diunggahPada,
+      },
+    ];
   }
 }
 
