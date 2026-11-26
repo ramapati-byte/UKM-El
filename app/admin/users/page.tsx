@@ -18,6 +18,8 @@ import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
 import DataTable, { type Column } from "@/components/ui/DataTable";
 import Pagination from "@/components/ui/Pagination";
+import { ukmService } from "@/services/ukm.service";
+import type { UkmEntity } from "@/types/ukm";
 
 interface User {
   id: number;
@@ -28,6 +30,8 @@ interface User {
   role: "superadmin" | "penyelenggara" | "peserta";
   status: "active" | "inactive";
   ukm: string | null;
+  ukm_id?: number | null;
+  ukm_nama?: string | null;
   created_at: string;
 }
 
@@ -59,6 +63,7 @@ const STATUS_OPTIONS = [
 export default function ManageUsersPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [ukms, setUkms] = useState<UkmEntity[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingData, setLoadingData] = useState(true);
 
@@ -75,6 +80,7 @@ export default function ManageUsersPage() {
     status: "active",
     password: "",
     ukm: "",
+    ukm_id: "",
   });
 
   const [formLoading, setFormLoading] = useState(false);
@@ -107,6 +113,10 @@ export default function ManageUsersPage() {
           }
     );
     fetchUsers();
+    ukmService
+      .list({ status: "all", limit: 200 })
+      .then((res) => setUkms(res.data ?? []))
+      .catch(() => setUkms([]));
   }, []);
 
   const handleLogout = () => {
@@ -129,6 +139,7 @@ export default function ManageUsersPage() {
       status: "active",
       password: "",
       ukm: "",
+      ukm_id: "",
     });
     setIsModalOpen(true);
   };
@@ -144,7 +155,8 @@ export default function ManageUsersPage() {
       role: u.role,
       status: u.status,
       password: "",
-      ukm: u.ukm || "",
+      ukm: u.ukm_nama || u.ukm || "",
+      ukm_id: u.ukm_id ? String(u.ukm_id) : "",
     });
     setIsModalOpen(true);
   };
@@ -569,18 +581,32 @@ export default function ManageUsersPage() {
               onChange={(val: string) => setFormData((prev) => ({ ...prev, role: val }))}
               options={ROLE_OPTIONS}
             />
-            <Input
-              label="Nama UKM / Organisasi"
-              name="ukm"
-              value={formData.ukm}
+            <Select
+              label="UKM / Organisasi"
+              name="ukm_id"
+              value={formData.ukm_id}
               disabled={formData.role !== "penyelenggara"}
-              onChange={handleInputChange}
-              placeholder={
-                formData.role !== "penyelenggara"
-                  ? "Hanya untuk peran Penyelenggara"
-                  : "Contoh: BEM Teknik / UKM Musik"
-              }
-              icon="bi-building"
+              onChange={(val: string) => {
+                const selected = ukms.find((item) => String(item.id) === val);
+                setFormData((prev) => ({
+                  ...prev,
+                  ukm_id: val,
+                  ukm: selected?.nama ?? "",
+                }));
+              }}
+              options={[
+                {
+                  value: "",
+                  label:
+                    formData.role !== "penyelenggara"
+                      ? "Hanya untuk peran Penyelenggara"
+                      : "-- Pilih UKM --",
+                },
+                ...ukms.map((item) => ({
+                  value: String(item.id),
+                  label: item.singkatan ? `${item.nama} (${item.singkatan})` : item.nama,
+                })),
+              ]}
             />
           </div>
 
