@@ -587,12 +587,17 @@ class MemberRealService implements MemberService {
   }
 
   async updateMember(id: string, payload: MemberUpdatePayload): Promise<MemberEntity> {
-    const current = await this.getMemberById(id);
-    return { ...current, ...payload, updatedAt: new Date().toISOString() };
+    await api.put(`/organizer/members/${id}`, {
+      status: payload.status,
+      divisi: payload.divisi,
+      jabatan: payload.jabatan,
+      periode_keluar: payload.periodeKeluar,
+    });
+    return this.getMemberById(id);
   }
 
-  async deleteMember(_id: string): Promise<void> {
-    return;
+  async deleteMember(id: string): Promise<void> {
+    await api.delete(`/organizer/members/${id}`);
   }
 
   async getMemberHistory(_mahasiswaId: string): Promise<MemberHistoryItem[]> {
