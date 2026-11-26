@@ -10,6 +10,7 @@ import type {
 } from "../types/finance";
 import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
+import { buildSimplePdfBlob, buildCsvBlob } from "../lib/pdf";
 import { MOCK_FINANCE_TRANSACTIONS, MOCK_FINANCE_SUMMARY } from "../mocks/finance.mock";
 
 class FinanceMockService implements FinanceService {
@@ -226,13 +227,38 @@ class FinanceRealService implements FinanceService {
   }
 
   async exportPdf(): Promise<Blob> {
-    return new Blob(["Laporan Keuangan"], { type: "application/pdf" });
+    const [{ data }, summary] = await Promise.all([
+      this.list({ limit: 100 }),
+      this.summary(),
+    ]);
+    const lines = [
+      `Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`,
+      `Total Pemasukan : Rp ${summary.totalPemasukan.toLocaleString("id-ID")}`,
+      `Total Pengeluaran: Rp ${summary.totalPengeluaran.toLocaleString("id-ID")}`,
+      `Saldo Akhir     : Rp ${summary.saldo.toLocaleString("id-ID")}`,
+      "---------------------------------------------------------------------",
+      ...data.map(
+        (t, i) =>
+          `${i + 1}. [${t.tanggalTransaksi.slice(0, 10)}] ${t.jenis.toUpperCase()} - Rp ${t.nominal.toLocaleString("id-ID")} (${t.status}) | ${t.deskripsi}`
+      ),
+    ];
+    return buildSimplePdfBlob("Laporan Keuangan UKM", lines);
   }
 
   async exportExcel(): Promise<Blob> {
-    return new Blob(["Laporan Keuangan"], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+    const { data } = await this.list({ limit: 500 });
+    return buildCsvBlob(
+      ["Nomor", "Tanggal", "Jenis", "Kategori", "Nominal", "Status", "Deskripsi"],
+      data.map((t) => [
+        t.nomorTransaksi,
+        t.tanggalTransaksi.slice(0, 10),
+        t.jenis,
+        t.kategori,
+        t.nominal,
+        t.status,
+        t.deskripsi,
+      ])
+    );
   }
 }
 

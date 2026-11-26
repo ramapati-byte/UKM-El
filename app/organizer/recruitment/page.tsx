@@ -87,7 +87,7 @@ export default function RecruitmentPage() {
         kuota: formState.kuota ? Number(formState.kuota) : undefined,
         periodeAwal: formState.periodeAwal,
         periodeAkhir: formState.periodeAkhir,
-        status: "draft",
+        status: "open",
       });
       showToast("Form rekrutmen berhasil dibuat.");
       setCreateOpen(false);

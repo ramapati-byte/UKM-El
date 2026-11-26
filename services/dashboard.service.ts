@@ -8,6 +8,7 @@ import type {
 } from "../types/dashboard";
 import api from "../lib/api";
 import { isMockEnabled } from "../lib/env";
+import { buildSimplePdfBlob, buildCsvBlob } from "../lib/pdf";
 import { MOCK_DASHBOARD_STATS, MOCK_DASHBOARD_TASKS } from "../mocks/dashboard.mock";
 
 class DashboardMockService implements DashboardService {
@@ -89,13 +90,27 @@ class DashboardRealService implements DashboardService {
   }
 
   async exportPdf(): Promise<Blob> {
-    return new Blob(["Laporan Dashboard"], { type: "application/pdf" });
+    const stats = await this.getStats();
+    return buildSimplePdfBlob("Laporan Ringkasan Dashboard UKM", [
+      `Tanggal Cetak  : ${new Date().toLocaleDateString("id-ID")}`,
+      `Total Anggota  : ${stats.totalAnggota}`,
+      `Total Kegiatan : ${stats.totalKegiatan}`,
+      `Total Anggaran : Rp ${stats.totalAnggaran.toLocaleString("id-ID")}`,
+      `Tugas Tertunda : ${stats.tugasTertunda}`,
+    ]);
   }
 
   async exportExcel(): Promise<Blob> {
-    return new Blob(["Laporan Dashboard"], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+    const stats = await this.getStats();
+    return buildCsvBlob(
+      ["Metrik", "Nilai"],
+      [
+        ["Total Anggota", stats.totalAnggota],
+        ["Total Kegiatan", stats.totalKegiatan],
+        ["Total Anggaran", stats.totalAnggaran],
+        ["Tugas Tertunda", stats.tugasTertunda],
+      ]
+    );
   }
 }
 

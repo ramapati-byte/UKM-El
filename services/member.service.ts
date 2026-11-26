@@ -640,8 +640,14 @@ class MemberRealService implements MemberService {
     id: string,
     payload: RecruitmentFormUpdatePayload
   ): Promise<RecruitmentForm> {
-    const current = await this.getRecruitmentFormById(id);
-    return { ...current, ...payload, updatedAt: new Date().toISOString() };
+    await api.put(`/organizer/recruitment/${id}`, {
+      judul: payload.judul,
+      deskripsi: payload.deskripsi,
+      kuota: payload.kuota,
+      tanggal_tutup: payload.periodeAkhir,
+      status: payload.status,
+    });
+    return this.getRecruitmentFormById(id);
   }
 
   async deleteRecruitmentForm(id: string): Promise<void> {
