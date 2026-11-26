@@ -61,9 +61,9 @@ export default function RecruitmentDetailPage() {
       setEditDeskripsi(f.deskripsi ?? "");
       setEditPersyaratan(f.persyaratan ?? "");
       setEditKuota(f.kuota ? String(f.kuota) : "");
-      setEditAwal(f.periodeAwal);
-      setEditAkhir(f.periodeAkhir);
-      setEditFields([...f.formFields]);
+      setEditAwal(f.periodeAwal ? String(f.periodeAwal).slice(0, 10) : "");
+      setEditAkhir(f.periodeAkhir ? String(f.periodeAkhir).slice(0, 10) : "");
+      setEditFields([...(f.formFields ?? [])]);
     } catch {
       setError("Gagal memuat form rekrutmen.");
     } finally {
@@ -275,7 +275,7 @@ export default function RecruitmentDetailPage() {
                     <i className="bi bi-link-45deg mr-1" />Link Publik
                   </p>
                   <code className="text-xs text-emerald-800 dark:text-emerald-300 break-all">
-                    {typeof window !== "undefined" ? window.location.origin : ""}/ukm/bem/recruitment/{form.id}
+                    {typeof window !== "undefined" ? window.location.origin : ""}/ukm/bem-el-rahma/recruitment?form={form.id}
                   </code>
                 </div>
               )}

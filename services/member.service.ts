@@ -457,10 +457,13 @@ interface BackendApplicantRow {
   id: number | string;
   recruitment_id?: number | string;
   mahasiswa_id?: number | string;
-  nama_lengkap: string;
+  nama_pelamar?: string;
+  nama_lengkap?: string;
   email?: string;
   no_hp?: string;
   nim?: string;
+  divisi_pilihan?: string;
+  motivasi?: string;
   status?: string;
   catatan?: string;
   jawaban?: string | Record<string, unknown>;
@@ -533,7 +536,7 @@ function mapApplicantRow(r: BackendApplicantRow, formId: string): Applicant {
     id: String(r.id),
     recruitmentFormId: String(r.recruitment_id || formId),
     mahasiswaId: r.mahasiswa_id ? String(r.mahasiswa_id) : undefined,
-    namaLengkap: r.nama_lengkap,
+    namaLengkap: r.nama_pelamar || r.nama_lengkap || "Pelamar",
     email: r.email || "-",
     noHp: r.no_hp || undefined,
     nim: r.nim || undefined,
